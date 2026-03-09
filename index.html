@@ -3,70 +3,211 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>길 만들기 퍼즐</title>
+    <title>Competency Game</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app-shell">
-      <header class="topbar">
-        <div class="problem-copy">
-          <p id="problemIndex" class="problem-index">1</p>
-          <div>
-            <h1>정답의 울타리 수에 맞게 울타리를 설치하여 교통수단을 정해진 손님에게 보내 주세요.</h1>
-            <p id="problemHint" class="sub-copy">칸 안에서 대각선 가까이를 눌러 `/` 또는 `\` 방향의 울타리를 바로 선택하세요.</p>
-          </div>
+      <header class="site-header">
+        <div class="site-copy">
+          <p class="eyebrow">Competency Game</p>
+          <h1 id="siteTitle">게임 선택</h1>
+          <p id="siteSubtitle" class="site-subtitle">원하는 게임을 골라 바로 시작하세요.</p>
         </div>
-        <div class="timer-badge">
-          <span class="timer-label">기록</span>
-          <strong id="timerText">00:00</strong>
-        </div>
+        <button id="menuButton" class="ghost-button hidden" type="button">게임 선택으로</button>
       </header>
 
-      <section class="play-layout">
-        <aside class="side-panel">
-          <div class="compact-stats">
-            <div class="compact-card">
-              <p>클릭 가능 횟수</p>
-              <strong id="clickText">20</strong>
+      <section id="menuScreen" class="screen">
+        <div class="game-grid">
+          <article class="game-card game-card-route">
+            <p class="card-kicker">5x5 보드 퍼즐</p>
+            <h2>길 만들기</h2>
+            <p class="card-description">
+              거울을 배치해서 각 차량이 같은 색 손님에게 도착하도록 길을 연결하세요.
+            </p>
+            <div class="card-meta">
+              <span>정적 퍼즐</span>
+              <span>최소 거울 수 조건 포함</span>
             </div>
-            <div class="compact-card">
-              <p>정답의 울타리 수</p>
-              <strong id="requiredText">3</strong>
-            </div>
-          </div>
+            <button class="primary-button" data-open-game="route" type="button">길 만들기 시작</button>
+          </article>
 
-          <div class="side-info">
-            <div class="mini-stat">
-              <span>배치한 울타리</span>
-              <strong id="placedText">0</strong>
+          <article class="game-card game-card-rotation">
+            <p class="card-kicker">2라운드 회전 퍼즐</p>
+            <h2>도형 회전하기</h2>
+            <p class="card-description">
+              왼쪽/오른쪽 45도 회전과 반전을 누적 적용해서 전 상태를 후 상태로 바꾸세요.
+            </p>
+            <div class="card-meta">
+              <span>라운드당 60초</span>
+              <span>최소 과정 아님</span>
             </div>
-            <div class="mini-stat">
-              <span>세션 최고 기록</span>
-              <strong id="bestText">--:--</strong>
+            <button class="primary-button" data-open-game="rotation" type="button">도형 회전하기 시작</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="routeScreen" class="screen hidden">
+        <header class="game-hero">
+          <div class="problem-copy">
+            <p id="routeProblemIndex" class="problem-index">1</p>
+            <div>
+              <h2>길 만들기</h2>
+              <p id="routeProblemHint" class="sub-copy">
+                칸의 대각선 방향을 눌러 `/` 또는 `\` 거울을 배치하세요.
+              </p>
             </div>
           </div>
+          <div class="timer-badge">
+            <span class="timer-label">기록</span>
+            <strong id="routeTimerText">00:00</strong>
+          </div>
+        </header>
 
-        </aside>
+        <section class="play-layout route-layout">
+          <aside class="side-panel">
+            <div class="compact-stats">
+              <div class="compact-card">
+                <p>남은 클릭</p>
+                <strong id="routeClickText">20</strong>
+              </div>
+              <div class="compact-card">
+                <p>정답 거울 수</p>
+                <strong id="routeRequiredText">3</strong>
+              </div>
+            </div>
 
-        <section class="board-panel">
-          <div class="board-stage">
-            <div id="board" class="board-grid" aria-label="길 만들기 보드"></div>
+            <div class="side-info">
+              <div class="mini-stat">
+                <span>배치한 거울</span>
+                <strong id="routePlacedText">0</strong>
+              </div>
+              <div class="mini-stat">
+                <span>세션 최고 기록</span>
+                <strong id="routeBestText">--:--</strong>
+              </div>
+            </div>
+          </aside>
+
+          <section class="board-panel">
+            <div class="board-stage">
+              <div id="routeBoard" class="board-grid" aria-label="길 만들기 보드"></div>
+            </div>
+            <p id="routeStatusText" class="status-text">
+              칸의 대각선 방향을 눌러 거울을 배치하세요.
+            </p>
+            <button id="routeCheckButton" class="submit-button" type="button">정답 제출</button>
+            <div class="bottom-actions">
+              <button id="routeResetButton" class="ghost-button" type="button">다시 시작</button>
+              <button id="routeClearButton" class="ghost-button" type="button">전체 지우기</button>
+              <button id="routeNextButton" class="ghost-button ghost-button-strong" type="button">다음 문제</button>
+            </div>
+            <div class="guide-strip">
+              <span><i class="guide-swatch guide-cell"></i>회색 칸은 아직 비어 있는 칸</span>
+              <span><i class="guide-swatch guide-stroke"></i>초록 선은 배치한 거울</span>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="rotationScreen" class="screen hidden">
+        <header class="game-hero">
+          <div class="problem-copy">
+            <p id="rotationRoundBadge" class="problem-index">1/2</p>
+            <div>
+              <h2>도형 회전하기</h2>
+              <p class="sub-copy">회전/반전은 현재 상태 기준으로 누적 적용됩니다.</p>
+            </div>
           </div>
-          <p id="statusText" class="status-text">칸 안의 대각선 방향을 눌러 울타리를 설치하세요.</p>
-          <button id="checkButton" class="submit-button" type="button">제출</button>
-          <div class="bottom-actions">
-            <button id="resetButton" class="ghost-button" type="button">다시 시작</button>
-            <button id="clearButton" class="ghost-button" type="button">전체 지우기</button>
-            <button id="nextButton" class="ghost-button ghost-button-strong" type="button">랜덤 다음 문제</button>
+          <div class="timer-badge timer-badge-warn">
+            <span class="timer-label">남은 시간</span>
+            <strong id="rotationTimerText">01:00</strong>
           </div>
-          <div class="guide-strip">
-            <span><i class="guide-swatch guide-cell"></i>회색 X는 아직 비어 있는 칸</span>
-            <span><i class="guide-swatch guide-stroke"></i>초록 선이 실제 배치된 울타리</span>
+        </header>
+
+        <section class="rotation-stats">
+          <div class="stat-card">
+            <span>라운드</span>
+            <strong id="rotationRoundText">1/2</strong>
           </div>
+          <div class="stat-card">
+            <span>문제</span>
+            <strong id="rotationQuestionText">1</strong>
+          </div>
+          <div class="stat-card">
+            <span>정답</span>
+            <strong id="rotationSolvedText">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>남은 클릭</span>
+            <strong id="rotationClickText">20</strong>
+          </div>
+        </section>
+
+        <section class="rotation-layout">
+          <section class="rotation-targets">
+            <div class="shape-card">
+              <p class="shape-label">전</p>
+              <div id="rotationBeforeStage" class="shape-stage" aria-label="회전 전 도형"></div>
+            </div>
+            <div class="shape-arrow" aria-hidden="true">↓</div>
+            <div class="shape-card shape-card-target">
+              <p class="shape-label">후</p>
+              <div id="rotationAfterStage" class="shape-stage" aria-label="회전 후 도형"></div>
+            </div>
+          </section>
+
+          <section class="rotation-controls">
+            <div class="shape-card shape-card-current">
+              <div class="shape-card-head">
+                <p class="shape-label">현재 상태</p>
+                <strong id="rotationStepCount" class="step-counter">0 / 20</strong>
+              </div>
+              <div id="rotationCurrentStage" class="shape-stage" aria-label="현재 도형 상태"></div>
+            </div>
+
+            <div class="rotation-button-grid">
+              <button class="rotation-action" data-rotation-op="left45" type="button">
+                <span class="rotation-action-icon">↺</span>
+                <span>왼쪽 45°</span>
+              </button>
+              <button class="rotation-action" data-rotation-op="right45" type="button">
+                <span class="rotation-action-icon">↻</span>
+                <span>오른쪽 45°</span>
+              </button>
+              <button class="rotation-action" data-rotation-op="flipX" type="button">
+                <span class="rotation-action-icon">↔</span>
+                <span>좌우반전</span>
+              </button>
+              <button class="rotation-action" data-rotation-op="flipY" type="button">
+                <span class="rotation-action-icon">↕</span>
+                <span>상하반전</span>
+              </button>
+            </div>
+
+            <div class="preview-head">
+              <p>과정 미리보기</p>
+              <span>최근 8단계</span>
+            </div>
+            <div id="rotationPreview" class="preview-grid" aria-label="회전 과정 미리보기"></div>
+
+            <div class="bottom-actions">
+              <button id="rotationUndoButton" class="ghost-button" type="button">하나 지움</button>
+              <button id="rotationClearButton" class="ghost-button" type="button">전체 초기화</button>
+            </div>
+
+            <button id="rotationSubmitButton" class="submit-button" type="button">답안 제출</button>
+            <button id="rotationNextButton" class="ghost-button ghost-button-strong hidden" type="button">
+              다음 라운드
+            </button>
+            <p id="rotationStatusText" class="status-text">
+              버튼을 눌러 전 상태를 후 상태와 같게 만들어 보세요.
+            </p>
+          </section>
         </section>
       </section>
     </main>
 
-    <script src="./app.js"></script>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>

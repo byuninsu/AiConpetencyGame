@@ -1,6 +1,6 @@
-import { createRouteGame } from "./js/route-game.js";
-import { createRotationGame } from "./js/rotation-game.js";
-import { createAppointmentGame } from "./js/appointment-game.js";
+import { createRouteGame } from "./js/route-game.js?v=20260309-mobilefix1";
+import { createRotationGame } from "./js/rotation-game.js?v=20260309-mobilefix1";
+import { createAppointmentGame } from "./js/appointment-game.js?v=20260309-mobilefix1";
 
 const dom = {
   siteTitle: document.querySelector("#siteTitle"),

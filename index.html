@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>길 만들기 퍼즐</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="problem-copy">
+          <p id="problemIndex" class="problem-index">1</p>
+          <div>
+            <h1>정답의 울타리 수에 맞게 울타리를 설치하여 교통수단을 정해진 손님에게 보내 주세요.</h1>
+            <p id="problemHint" class="sub-copy">칸 안에서 대각선 가까이를 눌러 `/` 또는 `\` 방향의 울타리를 바로 선택하세요.</p>
+          </div>
+        </div>
+        <div class="timer-badge">
+          <span class="timer-label">기록</span>
+          <strong id="timerText">00:00</strong>
+        </div>
+      </header>
+
+      <section class="play-layout">
+        <aside class="side-panel">
+          <div class="compact-stats">
+            <div class="compact-card">
+              <p>클릭 가능 횟수</p>
+              <strong id="clickText">20</strong>
+            </div>
+            <div class="compact-card">
+              <p>정답의 울타리 수</p>
+              <strong id="requiredText">3</strong>
+            </div>
+          </div>
+
+          <div class="side-info">
+            <div class="mini-stat">
+              <span>배치한 울타리</span>
+              <strong id="placedText">0</strong>
+            </div>
+            <div class="mini-stat">
+              <span>세션 최고 기록</span>
+              <strong id="bestText">--:--</strong>
+            </div>
+          </div>
+
+          <div class="target-panel">
+            <p class="panel-title">연결 목표</p>
+            <div id="assignmentList" class="assignment-list"></div>
+          </div>
+        </aside>
+
+        <section class="board-panel">
+          <div class="board-stage">
+            <div id="board" class="board-grid" aria-label="길 만들기 보드"></div>
+          </div>
+          <p id="statusText" class="status-text">칸 안의 대각선 방향을 눌러 울타리를 설치하세요.</p>
+          <button id="checkButton" class="submit-button" type="button">제출</button>
+          <div class="bottom-actions">
+            <button id="resetButton" class="ghost-button" type="button">다시 시작</button>
+            <button id="clearButton" class="ghost-button" type="button">전체 지우기</button>
+            <button id="nextButton" class="ghost-button ghost-button-strong" type="button">랜덤 다음 문제</button>
+          </div>
+          <div class="guide-strip">
+            <span><i class="guide-swatch guide-cell"></i>회색 X는 아직 비어 있는 칸</span>
+            <span><i class="guide-swatch guide-stroke"></i>초록 선이 실제 배치된 울타리</span>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

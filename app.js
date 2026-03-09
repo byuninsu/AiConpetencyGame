@@ -58,6 +58,8 @@ const rotationGame = createRotationGame({
   popupScore: document.querySelector("#rotationRoundPopupScore"),
   popupDetails: document.querySelector("#rotationRoundPopupDetails"),
   popupFootnote: document.querySelector("#rotationRoundPopupFootnote"),
+  popupProgress: document.querySelector("#rotationRoundPopupProgress"),
+  popupProgressBar: document.querySelector("#rotationRoundPopupProgressBar"),
   popupAction: document.querySelector("#rotationRoundPopupAction"),
   statusText: document.querySelector("#rotationStatusText"),
   submitButton: document.querySelector("#rotationSubmitButton"),

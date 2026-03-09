@@ -390,6 +390,7 @@ export function createRotationGame(dom) {
         ),
         footnote: `통과 기준: 각 라운드 정답률 ${formatPercent(PASS_RATIO)}% 이상`,
         actionLabel: "처음부터 다시",
+        progressDurationMs: 0,
       });
       setStatus(
         `2라운드 종료. 전체 ${totalSummary.correct}개 / ${totalSummary.attempts}개 정답, 정답률 ${totalSummary.percentText}%로 최종 ${sessionPassed ? "합격" : "불합격"}입니다.`,
@@ -407,6 +408,7 @@ export function createRotationGame(dom) {
       detailLines: ["3초 뒤 2라운드가 시작됩니다."],
       footnote: `통과 기준: 라운드 정답률 ${formatPercent(PASS_RATIO)}% 이상`,
       actionLabel: "",
+      progressDurationMs: ROUND_TRANSITION_DELAY_MS,
     });
     setStatus(
       `1라운드 종료. ${roundSummary.correct}개 / ${roundSummary.attempts}개 정답, 정답률 ${roundSummary.percentText}%로 ${roundSummary.passed ? "합격" : "불합격"}입니다.`,
@@ -456,6 +458,7 @@ export function createRotationGame(dom) {
     detailLines = [],
     footnote,
     actionLabel = "",
+    progressDurationMs = 0,
   }) {
     dom.popupCard.classList.remove("is-pass", "is-fail");
     dom.popupCard.classList.add(passed ? "is-pass" : "is-fail");
@@ -468,12 +471,14 @@ export function createRotationGame(dom) {
     dom.popupFootnote.textContent = footnote;
     dom.popupAction.textContent = actionLabel || "처음부터 다시";
     dom.popupAction.classList.toggle("hidden", !actionLabel);
+    syncPopupProgress(progressDurationMs);
     dom.popup.classList.remove("hidden");
   }
 
   function hidePopup() {
     dom.popupCard.classList.remove("is-pass", "is-fail");
     dom.popupAction.classList.add("hidden");
+    syncPopupProgress(0);
     dom.popup.classList.add("hidden");
   }
 
@@ -504,6 +509,23 @@ export function createRotationGame(dom) {
         return detail;
       }),
     );
+  }
+
+  function syncPopupProgress(durationMs) {
+    dom.popupProgress.classList.remove("is-animating");
+    dom.popupProgress.classList.toggle("hidden", durationMs <= 0);
+    dom.popupProgressBar.style.animation = "none";
+
+    if (durationMs <= 0) {
+      dom.popupProgressBar.style.removeProperty("--popup-progress-duration");
+      dom.popupProgressBar.style.removeProperty("animation");
+      return;
+    }
+
+    dom.popupProgressBar.style.setProperty("--popup-progress-duration", `${durationMs}ms`);
+    void dom.popupProgress.offsetWidth;
+    dom.popupProgressBar.style.removeProperty("animation");
+    dom.popupProgress.classList.add("is-animating");
   }
 }
 

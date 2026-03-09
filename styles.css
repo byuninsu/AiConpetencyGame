@@ -654,6 +654,41 @@ button {
   align-content: start;
 }
 
+.round-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(36, 31, 26, 0.28);
+}
+
+.round-popup-card {
+  width: min(100%, 420px);
+  padding: 24px 24px 22px;
+  border: 1px solid rgba(124, 114, 103, 0.18);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 24px 60px rgba(49, 39, 28, 0.2);
+  text-align: center;
+}
+
+.round-popup-title {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #3f392f;
+}
+
+.round-popup-body {
+  margin: 12px 0 0;
+  color: #62584e;
+  font-size: 1rem;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
 .rotation-utility {
   display: flex;
   align-items: center;

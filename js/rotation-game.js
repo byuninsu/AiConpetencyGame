@@ -2,6 +2,8 @@ const ROTATION_ROUND_MS = 60 * 1000;
 const ROTATION_PREVIEW_SLOTS = 8;
 const LETTER_POOL = ["Q", "P", "R", "F"];
 const TILE_SIZE = 24;
+const PASS_RATIO = 0.6;
+const ROUND_TRANSITION_DELAY_MS = 3000;
 
 const ROTATION_OPERATIONS = {
   left45: {
@@ -45,10 +47,10 @@ const ROUND_CONFIGS = [
 
 export function createRotationGame(dom) {
   const state = {
+    active: false,
     sessionStarted: false,
     roundIndex: 0,
-    roundSolvedCount: 0,
-    roundResults: Array(ROUND_CONFIGS.length).fill(0),
+    roundStats: ROUND_CONFIGS.map(createEmptyRoundStat),
     problemNumber: 1,
     history: [],
     clickCount: 0,
@@ -60,10 +62,12 @@ export function createRotationGame(dom) {
     timerAnchorMs: null,
     timerBaseMs: ROTATION_ROUND_MS,
     roundFinished: false,
+    popupTimeoutId: null,
   };
 
   attachEvents();
   renderPreview();
+  hidePopup();
 
   return {
     activate,
@@ -88,6 +92,8 @@ export function createRotationGame(dom) {
   }
 
   function activate() {
+    state.active = true;
+
     if (!state.sessionStarted) {
       startSession();
       return;
@@ -100,19 +106,23 @@ export function createRotationGame(dom) {
   }
 
   function deactivate() {
+    state.active = false;
     pauseTimer();
   }
 
   function startSession() {
     state.sessionStarted = true;
     state.roundIndex = 0;
-    state.roundResults = Array(ROUND_CONFIGS.length).fill(0);
+    state.roundStats = ROUND_CONFIGS.map(createEmptyRoundStat);
     startRound();
   }
 
   function startRound() {
+    clearPopupTimer();
+    hidePopup();
     pauseTimer();
-    state.roundSolvedCount = 0;
+
+    state.roundStats[state.roundIndex] = createEmptyRoundStat();
     state.problemNumber = 1;
     state.history = [];
     state.clickCount = 0;
@@ -121,12 +131,16 @@ export function createRotationGame(dom) {
     state.timerBaseMs = ROTATION_ROUND_MS;
     state.roundFinished = false;
     dom.movementToggle.checked = false;
+
     loadProblem();
     render();
     dom.nextButton.classList.add("hidden");
     dom.nextButton.textContent = isLastRound() ? "처음부터 다시" : "2라운드 시작";
     setStatus(`${currentRoundConfig().title} 라운드가 시작되었습니다. 1분 안에 최대한 많이 맞혀 보세요.`);
-    startTimer();
+
+    if (state.active) {
+      startTimer();
+    }
   }
 
   function loadProblem() {
@@ -139,12 +153,13 @@ export function createRotationGame(dom) {
 
   function render() {
     const roundText = `${state.roundIndex + 1} / ${ROUND_CONFIGS.length}`;
+    const stat = currentRoundStat();
 
     dom.roundBadge.textContent = roundText;
     dom.roundText.textContent = roundText;
     dom.questionText.textContent = String(state.problemNumber);
     dom.timerText.textContent = formatCountdownTime(state.remainingMs);
-    dom.solvedText.textContent = String(state.roundSolvedCount);
+    dom.solvedText.textContent = String(stat.correct);
     dom.clickText.textContent = String(getRemainingClicks());
     dom.stepCount.textContent = `${state.clickCount} / ${currentRoundConfig().clickLimit}`;
     dom.submitButton.disabled = state.roundFinished;
@@ -181,30 +196,33 @@ export function createRotationGame(dom) {
       const slot = document.createElement("div");
       const operationKey = recentHistory[index];
       const stepNumber = startStep + index;
+      slot.className = `preview-slot ${state.revealMoves ? "" : "preview-slot-text"}`.trim();
 
       if (operationKey) {
         const operation = ROTATION_OPERATIONS[operationKey];
-        slot.className = `preview-slot ${state.revealMoves ? "" : "preview-slot-text"}`.trim();
+        slot.classList.add("is-filled");
 
         if (state.revealMoves) {
-          slot.classList.add("is-filled");
           slot.innerHTML = `
             <span class="preview-slot-number">${stepNumber}</span>
             <div class="preview-slot-canvas">${buildSvg(state.currentProblem, recentMatrices[index], true)}</div>
             <span class="preview-slot-label">${operation.shortLabel}</span>
           `;
         } else {
-          slot.classList.add("is-filled");
           slot.innerHTML = `
             <span class="preview-slot-number">${stepNumber}</span>
             <span class="preview-slot-label">${operation.shortLabel}</span>
           `;
         }
-      } else {
-        slot.className = `preview-slot ${state.revealMoves ? "" : "preview-slot-text"}`.trim();
+      } else if (state.revealMoves) {
         slot.innerHTML = `
           <span class="preview-slot-number">${index + 1}</span>
-          ${state.revealMoves ? '<div class="preview-slot-canvas"></div>' : ""}
+          <div class="preview-slot-canvas"></div>
+          <span class="preview-slot-label">비어 있음</span>
+        `;
+      } else {
+        slot.innerHTML = `
+          <span class="preview-slot-number">${index + 1}</span>
           <span class="preview-slot-label">비어 있음</span>
         `;
       }
@@ -221,7 +239,7 @@ export function createRotationGame(dom) {
     }
 
     if (state.roundFinished) {
-      setStatus("라운드가 종료되었습니다. 다음 버튼으로 이동하세요.", "warning");
+      setStatus("라운드가 종료되었습니다.", "warning");
       return;
     }
 
@@ -274,22 +292,23 @@ export function createRotationGame(dom) {
       return;
     }
 
-    if (state.clickCount === 0) {
-      setStatus("먼저 회전이나 반전을 한 번 이상 입력해 보세요.", "warning");
-      return;
+    const stat = currentRoundStat();
+    const isCorrect = matricesMatch(state.currentMatrix, state.currentProblem.targetMatrix);
+
+    stat.attempts += 1;
+    if (isCorrect) {
+      stat.correct += 1;
     }
 
-    if (!matricesMatch(state.currentMatrix, state.currentProblem.targetMatrix)) {
-      setStatus("아직 후 상태와 같지 않습니다. 움직임을 다시 점검해 보세요.", "warning");
-      return;
-    }
-
-    state.roundSolvedCount += 1;
-    state.roundResults[state.roundIndex] = state.roundSolvedCount;
     state.problemNumber += 1;
     loadProblem();
     render();
-    setStatus("정답입니다. 다음 랜덤 문제로 넘어갑니다.", "success");
+
+    if (isCorrect) {
+      setStatus("정답입니다. 다음 랜덤 문제로 넘어갑니다.", "success");
+    } else {
+      setStatus("오답입니다. 다음 문제로 넘어갑니다.", "warning");
+    }
   }
 
   function advanceRound() {
@@ -336,19 +355,41 @@ export function createRotationGame(dom) {
   function finishRound() {
     pauseTimer();
     state.roundFinished = true;
+
+    const stat = currentRoundStat();
+    const accuracy = stat.attempts === 0 ? 0 : stat.correct / stat.attempts;
+    const percent = Math.round(accuracy * 100);
+    stat.passed = accuracy >= PASS_RATIO;
+
     render();
-    dom.nextButton.classList.remove("hidden");
 
     if (isLastRound()) {
-      const round1 = state.roundResults[0];
-      const round2 = state.roundResults[1];
       dom.nextButton.textContent = "처음부터 다시";
-      setStatus(`2라운드 종료. 1라운드 ${round1}개, 2라운드 ${round2}개 정답입니다.`, "success");
+      dom.nextButton.classList.remove("hidden");
+      showPopup(
+        `2라운드 ${stat.passed ? "통과" : "실패"}`,
+        `정답 ${stat.correct} / ${stat.attempts}\n정답률 ${percent}%`,
+      );
+      setStatus(
+        `2라운드 종료. ${stat.correct}개 / ${stat.attempts}개 정답으로 ${stat.passed ? "통과" : "실패"}입니다.`,
+        stat.passed ? "success" : "warning",
+      );
       return;
     }
 
-    dom.nextButton.textContent = "2라운드 시작";
-    setStatus(`1라운드 종료. 1분 동안 ${state.roundSolvedCount}개를 맞혔습니다.`, "success");
+    showPopup(
+      `1라운드 ${stat.passed ? "통과" : "실패"}`,
+      `정답 ${stat.correct} / ${stat.attempts}\n정답률 ${percent}%\n3초 뒤 2라운드가 시작됩니다.`,
+    );
+    setStatus(
+      `1라운드 종료. ${stat.correct}개 / ${stat.attempts}개 정답으로 ${stat.passed ? "통과" : "실패"}입니다.`,
+      stat.passed ? "success" : "warning",
+    );
+    clearPopupTimer();
+    state.popupTimeoutId = window.setTimeout(() => {
+      state.roundIndex += 1;
+      startRound();
+    }, ROUND_TRANSITION_DELAY_MS);
   }
 
   function rebuildCurrentMatrix() {
@@ -363,6 +404,10 @@ export function createRotationGame(dom) {
     return ROUND_CONFIGS[state.roundIndex];
   }
 
+  function currentRoundStat() {
+    return state.roundStats[state.roundIndex];
+  }
+
   function isLastRound() {
     return state.roundIndex === ROUND_CONFIGS.length - 1;
   }
@@ -375,6 +420,23 @@ export function createRotationGame(dom) {
     target.innerHTML = buildSvg(problem, matrix, false);
   }
 
+  function showPopup(title, body) {
+    dom.popupTitle.textContent = title;
+    dom.popupBody.textContent = body;
+    dom.popup.classList.remove("hidden");
+  }
+
+  function hidePopup() {
+    dom.popup.classList.add("hidden");
+  }
+
+  function clearPopupTimer() {
+    if (state.popupTimeoutId) {
+      window.clearTimeout(state.popupTimeoutId);
+      state.popupTimeoutId = null;
+    }
+  }
+
   function setStatus(message, type = "info") {
     dom.statusText.textContent = message;
     dom.statusText.className = "status-text";
@@ -385,6 +447,14 @@ export function createRotationGame(dom) {
       dom.statusText.classList.add("status-warning");
     }
   }
+}
+
+function createEmptyRoundStat() {
+  return {
+    correct: 0,
+    attempts: 0,
+    passed: false,
+  };
 }
 
 function buildRandomGlyphProblem() {
@@ -483,8 +553,8 @@ function buildGlyphMarkup(problem) {
       y="18"
       text-anchor="middle"
       font-size="${problem.fontSize}"
-      font-weight="900"
-      font-family="'Arial Black', 'Segoe UI', sans-serif"
+      font-weight="800"
+      font-family="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
       fill="#2c2c2c"
     >
       ${problem.text}

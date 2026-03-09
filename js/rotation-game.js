@@ -1,9 +1,19 @@
 const ROTATION_ROUND_MS = 60 * 1000;
 const ROTATION_PREVIEW_SLOTS = 8;
 const LETTER_POOL = ["Q", "P", "R", "F"];
+const TILE_GRID_SIZE = 4;
 const TILE_SIZE = 24;
+const TILE_FILLED_MIN = 9;
+const TILE_FILLED_MAX = 10;
+const TILE_SHAPE_ATTEMPTS = 32;
 const PASS_RATIO = 0.6;
 const ROUND_TRANSITION_DELAY_MS = 3000;
+const TILE_NEIGHBOR_OFFSETS = [
+  { row: -1, col: 0 },
+  { row: 1, col: 0 },
+  { row: 0, col: -1 },
+  { row: 0, col: 1 },
+];
 
 const ROTATION_OPERATIONS = {
   left45: {
@@ -85,6 +95,7 @@ export function createRotationGame(dom) {
     dom.clearButton.addEventListener("click", clearOperations);
     dom.submitButton.addEventListener("click", submitAnswer);
     dom.nextButton.addEventListener("click", advanceRound);
+    dom.popupAction.addEventListener("click", advanceRound);
     dom.movementToggle.addEventListener("change", () => {
       state.revealMoves = dom.movementToggle.checked;
       render();
@@ -357,33 +368,49 @@ export function createRotationGame(dom) {
     state.roundFinished = true;
 
     const stat = currentRoundStat();
-    const accuracy = stat.attempts === 0 ? 0 : stat.correct / stat.attempts;
-    const percent = Math.round(accuracy * 100);
-    stat.passed = accuracy >= PASS_RATIO;
+    const roundSummary = summarizeStat(stat);
+    stat.passed = roundSummary.passed;
 
     render();
 
     if (isLastRound()) {
+      const allRoundSummaries = state.roundStats.map(summarizeStat);
+      const totalSummary = summarizeAllRounds(state.roundStats);
+      const sessionPassed = allRoundSummaries.every((summary) => summary.passed);
+
       dom.nextButton.textContent = "처음부터 다시";
-      dom.nextButton.classList.remove("hidden");
-      showPopup(
-        `2라운드 ${stat.passed ? "통과" : "실패"}`,
-        `정답 ${stat.correct} / ${stat.attempts}\n정답률 ${percent}%`,
-      );
+      showPopup({
+        title: "최종 결과",
+        passed: sessionPassed,
+        message: sessionPassed ? "기준 충족" : "노력 필요",
+        scoreLabel: "전체",
+        scoreText: formatSummaryLine(totalSummary),
+        detailLines: allRoundSummaries.map(
+          (summary, index) => `${index + 1}라운드: ${formatSummaryLine(summary)}`,
+        ),
+        footnote: `통과 기준: 각 라운드 정답률 ${formatPercent(PASS_RATIO)}% 이상`,
+        actionLabel: "처음부터 다시",
+      });
       setStatus(
-        `2라운드 종료. ${stat.correct}개 / ${stat.attempts}개 정답으로 ${stat.passed ? "통과" : "실패"}입니다.`,
-        stat.passed ? "success" : "warning",
+        `2라운드 종료. 전체 ${totalSummary.correct}개 / ${totalSummary.attempts}개 정답, 정답률 ${totalSummary.percentText}%로 최종 ${sessionPassed ? "합격" : "불합격"}입니다.`,
+        sessionPassed ? "success" : "warning",
       );
       return;
     }
 
-    showPopup(
-      `1라운드 ${stat.passed ? "통과" : "실패"}`,
-      `정답 ${stat.correct} / ${stat.attempts}\n정답률 ${percent}%\n3초 뒤 2라운드가 시작됩니다.`,
-    );
+    showPopup({
+      title: "1라운드 결과",
+      passed: roundSummary.passed,
+      message: roundSummary.passed ? "기준 충족" : "노력 필요",
+      scoreLabel: "1라운드",
+      scoreText: formatSummaryLine(roundSummary),
+      detailLines: ["3초 뒤 2라운드가 시작됩니다."],
+      footnote: `통과 기준: 라운드 정답률 ${formatPercent(PASS_RATIO)}% 이상`,
+      actionLabel: "",
+    });
     setStatus(
-      `1라운드 종료. ${stat.correct}개 / ${stat.attempts}개 정답으로 ${stat.passed ? "통과" : "실패"}입니다.`,
-      stat.passed ? "success" : "warning",
+      `1라운드 종료. ${roundSummary.correct}개 / ${roundSummary.attempts}개 정답, 정답률 ${roundSummary.percentText}%로 ${roundSummary.passed ? "합격" : "불합격"}입니다.`,
+      roundSummary.passed ? "success" : "warning",
     );
     clearPopupTimer();
     state.popupTimeoutId = window.setTimeout(() => {
@@ -420,13 +447,33 @@ export function createRotationGame(dom) {
     target.innerHTML = buildSvg(problem, matrix, false);
   }
 
-  function showPopup(title, body) {
+  function showPopup({
+    title,
+    passed,
+    message,
+    scoreLabel,
+    scoreText,
+    detailLines = [],
+    footnote,
+    actionLabel = "",
+  }) {
+    dom.popupCard.classList.remove("is-pass", "is-fail");
+    dom.popupCard.classList.add(passed ? "is-pass" : "is-fail");
     dom.popupTitle.textContent = title;
-    dom.popupBody.textContent = body;
+    dom.popupStatus.textContent = passed ? "합격" : "불합격";
+    dom.popupMessage.textContent = message;
+    dom.popupScoreLabel.textContent = scoreLabel;
+    dom.popupScore.textContent = scoreText;
+    renderPopupDetails(detailLines);
+    dom.popupFootnote.textContent = footnote;
+    dom.popupAction.textContent = actionLabel || "처음부터 다시";
+    dom.popupAction.classList.toggle("hidden", !actionLabel);
     dom.popup.classList.remove("hidden");
   }
 
   function hidePopup() {
+    dom.popupCard.classList.remove("is-pass", "is-fail");
+    dom.popupAction.classList.add("hidden");
     dom.popup.classList.add("hidden");
   }
 
@@ -447,6 +494,17 @@ export function createRotationGame(dom) {
       dom.statusText.classList.add("status-warning");
     }
   }
+
+  function renderPopupDetails(detailLines) {
+    dom.popupDetails.replaceChildren(
+      ...detailLines.map((line) => {
+        const detail = document.createElement("p");
+        detail.className = "round-popup-detail";
+        detail.textContent = line;
+        return detail;
+      }),
+    );
+  }
 }
 
 function createEmptyRoundStat() {
@@ -455,6 +513,40 @@ function createEmptyRoundStat() {
     attempts: 0,
     passed: false,
   };
+}
+
+function summarizeStat(stat) {
+  const accuracy = stat.attempts === 0 ? 0 : stat.correct / stat.attempts;
+  return {
+    correct: stat.correct,
+    attempts: stat.attempts,
+    accuracy,
+    percentText: formatPercent(accuracy),
+    passed: accuracy >= PASS_RATIO,
+  };
+}
+
+function summarizeAllRounds(roundStats) {
+  const totals = roundStats.reduce(
+    (summary, stat) => {
+      summary.correct += stat.correct;
+      summary.attempts += stat.attempts;
+      return summary;
+    },
+    { correct: 0, attempts: 0 },
+  );
+
+  const accuracy = totals.attempts === 0 ? 0 : totals.correct / totals.attempts;
+  return {
+    correct: totals.correct,
+    attempts: totals.attempts,
+    accuracy,
+    percentText: formatPercent(accuracy),
+  };
+}
+
+function formatSummaryLine(summary) {
+  return `${summary.correct} / ${summary.attempts} (${summary.percentText}%)`;
 }
 
 function buildRandomGlyphProblem() {
@@ -498,18 +590,167 @@ function buildRandomTileProblem() {
 }
 
 function createRandomCells() {
-  const cells = Array.from({ length: 4 }, () => Array(4).fill(0));
-  const filledCount = randomInteger(4, 9);
-  let painted = 0;
+  for (let attempt = 0; attempt < TILE_SHAPE_ATTEMPTS; attempt += 1) {
+    const filledCount = randomInteger(TILE_FILLED_MIN, TILE_FILLED_MAX);
+    const cells = createCompactTileCells(filledCount);
+    if (cells) {
+      return cells;
+    }
+  }
 
-  while (painted < filledCount) {
-    const row = randomInteger(0, 3);
-    const col = randomInteger(0, 3);
-    if (cells[row][col] === 1) {
+  return createFallbackTileCells();
+}
+
+function createCompactTileCells(filledCount) {
+  const bounds = pickTileBounds(filledCount);
+  const cells = Array.from({ length: TILE_GRID_SIZE }, () => Array(TILE_GRID_SIZE).fill(0));
+  const removeCount = bounds.width * bounds.height - filledCount;
+
+  for (let row = bounds.top; row < bounds.top + bounds.height; row += 1) {
+    for (let col = bounds.left; col < bounds.left + bounds.width; col += 1) {
+      cells[row][col] = 1;
+    }
+  }
+
+  for (let removed = 0; removed < removeCount; removed += 1) {
+    const removableCells = findRemovableTileCells(cells, bounds);
+    if (removableCells.length === 0) {
+      return null;
+    }
+
+    const nextCell = pickRandom(removableCells);
+    cells[nextCell.row][nextCell.col] = 0;
+  }
+
+  return cells;
+}
+
+function pickTileBounds(filledCount) {
+  const sizeOptions =
+    filledCount === TILE_FILLED_MIN
+      ? [
+          { width: 3, height: 4 },
+          { width: 4, height: 3 },
+          { width: 3, height: 4 },
+          { width: 4, height: 3 },
+          { width: 3, height: 3 },
+        ]
+      : [
+          { width: 3, height: 4 },
+          { width: 4, height: 3 },
+        ];
+
+  const size = pickRandom(sizeOptions);
+  return {
+    width: size.width,
+    height: size.height,
+    top: randomInteger(0, TILE_GRID_SIZE - size.height),
+    left: randomInteger(0, TILE_GRID_SIZE - size.width),
+  };
+}
+
+function findRemovableTileCells(cells, bounds) {
+  const removable = [];
+
+  for (let row = bounds.top; row < bounds.top + bounds.height; row += 1) {
+    for (let col = bounds.left; col < bounds.left + bounds.width; col += 1) {
+      if (!cells[row][col] || !isBoxBoundaryCell(row, col, bounds)) {
+        continue;
+      }
+
+      if (canRemoveTileCell(cells, row, col)) {
+        removable.push({ row, col });
+      }
+    }
+  }
+
+  return removable;
+}
+
+function isBoxBoundaryCell(row, col, bounds) {
+  return (
+    row === bounds.top ||
+    row === bounds.top + bounds.height - 1 ||
+    col === bounds.left ||
+    col === bounds.left + bounds.width - 1
+  );
+}
+
+function canRemoveTileCell(cells, row, col) {
+  cells[row][col] = 0;
+  const stillConnected = isTileShapeConnected(cells);
+  cells[row][col] = 1;
+  return stillConnected;
+}
+
+function isTileShapeConnected(cells) {
+  const start = findFirstFilledCell(cells);
+  if (!start) {
+    return false;
+  }
+
+  const seen = new Set();
+  const queue = [start];
+  let visited = 0;
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const key = `${current.row}:${current.col}`;
+    if (seen.has(key)) {
       continue;
     }
-    cells[row][col] = 1;
-    painted += 1;
+
+    seen.add(key);
+    visited += 1;
+
+    TILE_NEIGHBOR_OFFSETS.forEach((offset) => {
+      const nextRow = current.row + offset.row;
+      const nextCol = current.col + offset.col;
+      if (
+        nextRow < 0 ||
+        nextRow >= TILE_GRID_SIZE ||
+        nextCol < 0 ||
+        nextCol >= TILE_GRID_SIZE ||
+        !cells[nextRow][nextCol]
+      ) {
+        return;
+      }
+
+      queue.push({ row: nextRow, col: nextCol });
+    });
+  }
+
+  return visited === countFilledCells(cells);
+}
+
+function findFirstFilledCell(cells) {
+  for (let row = 0; row < TILE_GRID_SIZE; row += 1) {
+    for (let col = 0; col < TILE_GRID_SIZE; col += 1) {
+      if (cells[row][col]) {
+        return { row, col };
+      }
+    }
+  }
+
+  return null;
+}
+
+function countFilledCells(cells) {
+  return cells.reduce(
+    (total, rowValues) => total + rowValues.reduce((rowTotal, value) => rowTotal + value, 0),
+    0,
+  );
+}
+
+function createFallbackTileCells() {
+  const cells = Array.from({ length: TILE_GRID_SIZE }, () => Array(TILE_GRID_SIZE).fill(0));
+  const top = randomInteger(0, TILE_GRID_SIZE - 3);
+  const left = randomInteger(0, TILE_GRID_SIZE - 3);
+
+  for (let row = top; row < top + 3; row += 1) {
+    for (let col = left; col < left + 3; col += 1) {
+      cells[row][col] = 1;
+    }
   }
 
   return cells;
@@ -517,6 +758,7 @@ function createRandomCells() {
 
 function getTileSignature(cells, matrix) {
   const points = [];
+  const axisOffset = (TILE_GRID_SIZE - 1) / 2;
 
   cells.forEach((rowValues, rowIndex) => {
     rowValues.forEach((value, colIndex) => {
@@ -524,8 +766,8 @@ function getTileSignature(cells, matrix) {
         return;
       }
 
-      const x = colIndex - 1.5;
-      const y = rowIndex - 1.5;
+      const x = colIndex - axisOffset;
+      const y = rowIndex - axisOffset;
       const tx = normalizeMatrixValue(matrix.a * x + matrix.c * y);
       const ty = normalizeMatrixValue(matrix.b * x + matrix.d * y);
       points.push(`${tx},${ty}`);
@@ -563,7 +805,7 @@ function buildGlyphMarkup(problem) {
 }
 
 function buildTileMarkup(problem) {
-  const offset = ((4 - 1) * TILE_SIZE) / 2;
+  const offset = ((TILE_GRID_SIZE - 1) * TILE_SIZE) / 2;
   const cells = [];
 
   problem.cells.forEach((rowValues, rowIndex) => {
@@ -659,6 +901,10 @@ function formatCountdownTime(ms) {
   const minutesText = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const secondsText = String(totalSeconds % 60).padStart(2, "0");
   return `${minutesText}:${secondsText}`;
+}
+
+function formatPercent(ratio) {
+  return (ratio * 100).toFixed(1);
 }
 
 function pickRandom(list) {

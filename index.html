@@ -219,9 +219,23 @@
         </section>
 
         <div id="rotationRoundPopup" class="round-popup hidden" aria-live="polite" aria-atomic="true">
-          <div class="round-popup-card">
-            <strong id="rotationRoundPopupTitle" class="round-popup-title">라운드 결과</strong>
-            <p id="rotationRoundPopupBody" class="round-popup-body"></p>
+          <div id="rotationRoundPopupCard" class="round-popup-card">
+            <p id="rotationRoundPopupTitle" class="round-popup-title">라운드 결과</p>
+            <strong id="rotationRoundPopupStatus" class="round-popup-status">합격</strong>
+            <p id="rotationRoundPopupMessage" class="round-popup-message">기준 충족</p>
+            <div class="round-popup-score-block">
+              <span id="rotationRoundPopupScoreLabel" class="round-popup-score-label">정답</span>
+              <strong id="rotationRoundPopupScore" class="round-popup-score">0 / 0 (0.0%)</strong>
+            </div>
+            <div id="rotationRoundPopupDetails" class="round-popup-details"></div>
+            <p id="rotationRoundPopupFootnote" class="round-popup-footnote"></p>
+            <button
+              id="rotationRoundPopupAction"
+              class="ghost-button ghost-button-strong round-popup-action hidden"
+              type="button"
+            >
+              처음부터 다시
+            </button>
           </div>
         </div>
       </section>

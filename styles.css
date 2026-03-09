@@ -330,10 +330,10 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   border: 1px solid var(--panel-border);
   background: #ffffff;
-  padding: 4px 2px;
+  padding: 5px 2px;
 }
 
 .edge-token.color-yellow {
@@ -370,6 +370,16 @@ button {
 .icon-svg.icon-person {
   width: 26px;
   height: 26px;
+}
+
+.edge-token .icon-svg {
+  width: 42px;
+  height: 34px;
+}
+
+.edge-token .icon-svg.icon-person {
+  width: 30px;
+  height: 30px;
 }
 
 .status-text {
@@ -516,6 +526,21 @@ button {
   .icon-svg.icon-person {
     width: 22px;
     height: 22px;
+  }
+
+  .edge-token {
+    gap: 2px;
+    padding: 4px 1px;
+  }
+
+  .edge-token .icon-svg {
+    width: 34px;
+    height: 28px;
+  }
+
+  .edge-token .icon-svg.icon-person {
+    width: 24px;
+    height: 24px;
   }
 
   .bottom-actions {

@@ -105,8 +105,8 @@ button {
 
 .play-layout {
   display: grid;
-  grid-template-columns: 170px minmax(0, 1fr);
-  gap: 28px;
+  grid-template-columns: 156px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
@@ -148,8 +148,7 @@ button {
   font-weight: 800;
 }
 
-.side-info,
-.target-panel {
+.side-info {
   border: 1px solid var(--panel-border);
   border-radius: 18px;
   background: var(--panel);
@@ -181,76 +180,12 @@ button {
   font-size: 1.2rem;
 }
 
-.target-panel {
-  padding: 14px;
-}
-
-.panel-title {
-  margin: 0;
-  font-size: 0.86rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-
-.assignment-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.assignment-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid #eceef5;
-  background: #fbfcff;
-}
-
-.assignment-side {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.assignment-side.color-yellow {
-  color: #ac7f00;
-}
-
-.assignment-side.color-blue {
-  color: #405fca;
-}
-
-.assignment-side.color-red {
-  color: #ca5252;
-}
-
-.assignment-copy strong {
-  display: block;
-  font-size: 0.94rem;
-}
-
-.assignment-copy span {
-  display: block;
-  margin-top: 3px;
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-
-.assignment-arrow {
-  color: var(--muted);
-  font-weight: 800;
-}
-
 .board-panel {
   text-align: center;
 }
 
 .board-stage {
-  width: min(100%, 560px);
+  width: min(100%, 620px);
   margin: 26px auto 0;
 }
 
@@ -262,7 +197,7 @@ button {
 }
 
 .board-slot {
-  padding: 2px;
+  padding: 1px;
 }
 
 .board-cell,
@@ -330,10 +265,10 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   border: 1px solid var(--panel-border);
   background: #ffffff;
-  padding: 5px 2px;
+  padding: 4px 1px;
 }
 
 .edge-token.color-yellow {
@@ -352,13 +287,9 @@ button {
 }
 
 .token-code {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 800;
-}
-
-.token-role {
-  font-size: 0.54rem;
-  font-weight: 800;
+  line-height: 1;
 }
 
 .icon-svg {
@@ -373,13 +304,13 @@ button {
 }
 
 .edge-token .icon-svg {
-  width: 42px;
-  height: 34px;
+  width: 60px;
+  height: 48px;
 }
 
 .edge-token .icon-svg.icon-person {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
 }
 
 .status-text {
@@ -534,13 +465,13 @@ button {
   }
 
   .edge-token .icon-svg {
-    width: 34px;
-    height: 28px;
+    width: 44px;
+    height: 36px;
   }
 
   .edge-token .icon-svg.icon-person {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
   }
 
   .bottom-actions {

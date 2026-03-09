@@ -69,7 +69,6 @@ const dom = {
   requiredText: document.querySelector("#requiredText"),
   placedText: document.querySelector("#placedText"),
   bestText: document.querySelector("#bestText"),
-  assignmentList: document.querySelector("#assignmentList"),
   board: document.querySelector("#board"),
   statusText: document.querySelector("#statusText"),
   checkButton: document.querySelector("#checkButton"),
@@ -442,36 +441,6 @@ function createPersonSvg() {
   `;
 }
 
-function renderAssignments() {
-  const puzzle = currentPuzzle();
-  dom.assignmentList.innerHTML = "";
-
-  puzzle.vehicles.forEach((vehicle) => {
-    const meta = COLOR_META[vehicle.color];
-    const passenger = getPassengerByColor(puzzle, vehicle.color);
-    const item = document.createElement("div");
-    item.className = "assignment-item";
-    item.innerHTML = `
-      <div class="assignment-side ${meta.swatchClass}">
-        ${createVehicleSvg(vehicle.color)}
-        <div class="assignment-copy">
-          <strong>${meta.vehicleName}</strong>
-          <span>${formatEdge(vehicle.entry)}</span>
-        </div>
-      </div>
-      <span class="assignment-arrow">→</span>
-      <div class="assignment-side ${meta.swatchClass}">
-        ${createPersonSvg()}
-        <div class="assignment-copy">
-          <strong>${meta.passengerName}</strong>
-          <span>${formatEdge(passenger.exit)}</span>
-        </div>
-      </div>
-    `;
-    dom.assignmentList.appendChild(item);
-  });
-}
-
 function renderBoard() {
   const puzzle = currentPuzzle();
   const edgeItems = new Map();
@@ -532,7 +501,6 @@ function renderBoard() {
           token.innerHTML = `
             ${tokenData.icon}
             <span class="token-code">${tokenData.code}</span>
-            <span class="token-role">${tokenData.role}</span>
           `;
           slot.appendChild(token);
         }
@@ -572,7 +540,6 @@ function renderStats() {
 }
 
 function renderAll() {
-  renderAssignments();
   renderBoard();
   renderStats();
 }

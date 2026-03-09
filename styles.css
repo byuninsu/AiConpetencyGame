@@ -654,6 +654,28 @@ button {
   align-content: start;
 }
 
+.rotation-utility {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.movement-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5a5147;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.movement-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue);
+}
+
 .step-counter {
   color: var(--muted);
   font-size: 0.9rem;
@@ -717,6 +739,10 @@ button {
   padding: 10px;
 }
 
+.preview-slot.is-filled {
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .preview-slot-number {
   color: #b0a69a;
   font-size: 0.78rem;
@@ -738,6 +764,19 @@ button {
   color: #6d6358;
   font-size: 0.74rem;
   font-weight: 700;
+}
+
+.preview-slot-text {
+  grid-template-rows: auto 1fr;
+  min-height: 94px;
+}
+
+.preview-slot-text .preview-slot-label {
+  display: flex;
+  align-items: center;
+  color: #564d44;
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .preview-slot:not(.is-filled) {
@@ -820,6 +859,11 @@ button {
 
   .shape-stage svg {
     width: min(100%, 220px);
+  }
+
+  .rotation-utility {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

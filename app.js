@@ -41,6 +41,8 @@ const rotationGame = createRotationGame({
   solvedText: document.querySelector("#rotationSolvedText"),
   clickText: document.querySelector("#rotationClickText"),
   stepCount: document.querySelector("#rotationStepCount"),
+  movementToggle: document.querySelector("#rotationMovementToggle"),
+  currentCard: document.querySelector("#rotationCurrentCard"),
   beforeStage: document.querySelector("#rotationBeforeStage"),
   afterStage: document.querySelector("#rotationAfterStage"),
   currentStage: document.querySelector("#rotationCurrentStage"),
@@ -124,5 +126,5 @@ function renderRouteHeader() {
 
 function renderRotationHeader() {
   dom.siteTitle.textContent = "도형 회전하기";
-  dom.siteSubtitle.textContent = "회전과 반전을 누적 적용해서 전 상태를 후 상태로 바꾸세요.";
+  dom.siteSubtitle.textContent = "1분 안에 최대한 많은 문제를 맞히는 라운드형 회전 퍼즐입니다.";
 }

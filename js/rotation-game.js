@@ -1,55 +1,45 @@
 const ROTATION_ROUND_MS = 60 * 1000;
 const ROTATION_PREVIEW_SLOTS = 8;
+const LETTER_POOL = ["Q", "P", "R", "F"];
+const TILE_SIZE = 24;
 
 const ROTATION_OPERATIONS = {
   left45: {
-    label: "왼쪽 45°",
-    shortLabel: "↺ 45°",
+    label: "왼쪽 45도",
+    shortLabel: "왼쪽 45도",
     matrix: rotationMatrix(-45),
   },
   right45: {
-    label: "오른쪽 45°",
-    shortLabel: "↻ 45°",
+    label: "오른쪽 45도",
+    shortLabel: "오른쪽 45도",
     matrix: rotationMatrix(45),
   },
   flipX: {
     label: "좌우반전",
-    shortLabel: "↔",
+    shortLabel: "좌우반전",
     matrix: normalizeMatrix({ a: -1, b: 0, c: 0, d: 1 }),
   },
   flipY: {
     label: "상하반전",
-    shortLabel: "↕",
+    shortLabel: "상하반전",
     matrix: normalizeMatrix({ a: 1, b: 0, c: 0, d: -1 }),
   },
 };
 
-const ROTATION_ROUNDS = [
+const TRANSFORM_SET = buildTransformSet();
+
+const ROUND_CONFIGS = [
   {
     id: 1,
     clickLimit: 20,
-    beforeMatrix: rotationMatrix(-45),
-    targetMatrix: normalizeMatrix({ a: -1, b: 0, c: 0, d: 1 }),
-    shape: {
-      type: "glyph",
-      text: "P",
-      fontSize: 124,
-    },
+    kind: "glyph",
+    title: "문자 회전",
   },
   {
     id: 2,
     clickLimit: 20,
-    beforeMatrix: rotationMatrix(45),
-    targetMatrix: rotationMatrix(135),
-    shape: {
-      type: "tiles",
-      cells: [
-        [1, 1, 1, 0],
-        [0, 0, 0, 0],
-        [1, 0, 0, 0],
-        [0, 0, 0, 0],
-      ],
-    },
+    kind: "tiles",
+    title: "블록 회전",
   },
 ];
 
@@ -57,10 +47,14 @@ export function createRotationGame(dom) {
   const state = {
     sessionStarted: false,
     roundIndex: 0,
-    solvedCount: 0,
+    roundSolvedCount: 0,
+    roundResults: Array(ROUND_CONFIGS.length).fill(0),
+    problemNumber: 1,
     history: [],
     clickCount: 0,
-    currentMatrix: cloneMatrix(ROTATION_ROUNDS[0].beforeMatrix),
+    currentMatrix: cloneMatrix(TRANSFORM_SET[0]),
+    currentProblem: null,
+    revealMoves: false,
     remainingMs: ROTATION_ROUND_MS,
     timerId: null,
     timerAnchorMs: null,
@@ -87,6 +81,10 @@ export function createRotationGame(dom) {
     dom.clearButton.addEventListener("click", clearOperations);
     dom.submitButton.addEventListener("click", submitAnswer);
     dom.nextButton.addEventListener("click", advanceRound);
+    dom.movementToggle.addEventListener("change", () => {
+      state.revealMoves = dom.movementToggle.checked;
+      render();
+    });
   }
 
   function activate() {
@@ -108,81 +106,105 @@ export function createRotationGame(dom) {
   function startSession() {
     state.sessionStarted = true;
     state.roundIndex = 0;
-    state.solvedCount = 0;
+    state.roundResults = Array(ROUND_CONFIGS.length).fill(0);
     startRound();
   }
 
   function startRound() {
-    const round = currentRound();
-
+    pauseTimer();
+    state.roundSolvedCount = 0;
+    state.problemNumber = 1;
     state.history = [];
     state.clickCount = 0;
-    state.currentMatrix = cloneMatrix(round.beforeMatrix);
+    state.revealMoves = false;
     state.remainingMs = ROTATION_ROUND_MS;
     state.timerBaseMs = ROTATION_ROUND_MS;
     state.roundFinished = false;
-
-    pauseTimer();
+    dom.movementToggle.checked = false;
+    loadProblem();
     render();
     dom.nextButton.classList.add("hidden");
-    dom.nextButton.textContent = isLastRound() ? "처음부터 다시" : "다음 라운드";
-    setStatus("버튼을 눌러 전 상태를 후 상태와 같게 만들어 보세요.");
+    dom.nextButton.textContent = isLastRound() ? "처음부터 다시" : "2라운드 시작";
+    setStatus(`${currentRoundConfig().title} 라운드가 시작되었습니다. 1분 안에 최대한 많이 맞혀 보세요.`);
     startTimer();
   }
 
+  function loadProblem() {
+    state.history = [];
+    state.clickCount = 0;
+    state.currentProblem =
+      currentRoundConfig().kind === "glyph" ? buildRandomGlyphProblem() : buildRandomTileProblem();
+    state.currentMatrix = cloneMatrix(state.currentProblem.beforeMatrix);
+  }
+
   function render() {
-    const round = currentRound();
-    const roundText = `${state.roundIndex + 1}/${ROTATION_ROUNDS.length}`;
+    const roundText = `${state.roundIndex + 1} / ${ROUND_CONFIGS.length}`;
 
     dom.roundBadge.textContent = roundText;
     dom.roundText.textContent = roundText;
-    dom.questionText.textContent = String(round.id);
+    dom.questionText.textContent = String(state.problemNumber);
     dom.timerText.textContent = formatCountdownTime(state.remainingMs);
-    dom.solvedText.textContent = String(state.solvedCount);
+    dom.solvedText.textContent = String(state.roundSolvedCount);
     dom.clickText.textContent = String(getRemainingClicks());
-    dom.stepCount.textContent = `${state.clickCount} / ${round.clickLimit}`;
+    dom.stepCount.textContent = `${state.clickCount} / ${currentRoundConfig().clickLimit}`;
     dom.submitButton.disabled = state.roundFinished;
+    dom.movementToggle.checked = state.revealMoves;
+    dom.currentCard.classList.toggle("hidden", !state.revealMoves);
 
-    renderShape(dom.beforeStage, round, round.beforeMatrix);
-    renderShape(dom.afterStage, round, round.targetMatrix);
-    renderShape(dom.currentStage, round, state.currentMatrix);
+    renderShape(dom.beforeStage, state.currentProblem, state.currentProblem.beforeMatrix);
+    renderShape(dom.afterStage, state.currentProblem, state.currentProblem.targetMatrix);
+
+    if (state.revealMoves) {
+      renderShape(dom.currentStage, state.currentProblem, state.currentMatrix);
+    } else {
+      dom.currentStage.innerHTML = "";
+    }
+
     renderPreview();
   }
 
   function renderPreview() {
-    const round = currentRound();
-    const snapshots = [];
-    let matrix = cloneMatrix(round.beforeMatrix);
-
-    state.history.forEach((operationKey, index) => {
-      const operation = ROTATION_OPERATIONS[operationKey];
-      matrix = multiplyMatrices(operation.matrix, matrix);
-      snapshots.push({
-        step: index + 1,
-        label: operation.shortLabel,
-        matrix: cloneMatrix(matrix),
-      });
-    });
-
-    const visibleSnapshots = snapshots.slice(-ROTATION_PREVIEW_SLOTS);
     dom.preview.innerHTML = "";
+
+    const recentHistory = state.history.slice(-ROTATION_PREVIEW_SLOTS);
+    const startStep = Math.max(0, state.history.length - recentHistory.length) + 1;
+
+    let matrix = cloneMatrix(state.currentProblem?.beforeMatrix ?? TRANSFORM_SET[0]);
+    const previewMatrices = [];
+    state.history.forEach((operationKey) => {
+      matrix = multiplyMatrices(ROTATION_OPERATIONS[operationKey].matrix, matrix);
+      previewMatrices.push(cloneMatrix(matrix));
+    });
+    const recentMatrices = previewMatrices.slice(-ROTATION_PREVIEW_SLOTS);
 
     for (let index = 0; index < ROTATION_PREVIEW_SLOTS; index += 1) {
       const slot = document.createElement("div");
-      slot.className = "preview-slot";
-      const snapshot = visibleSnapshots[index];
+      const operationKey = recentHistory[index];
+      const stepNumber = startStep + index;
 
-      if (snapshot) {
-        slot.classList.add("is-filled");
-        slot.innerHTML = `
-          <span class="preview-slot-number">${snapshot.step}</span>
-          <div class="preview-slot-canvas">${buildSvg(round, snapshot.matrix, true)}</div>
-          <span class="preview-slot-label">${snapshot.label}</span>
-        `;
+      if (operationKey) {
+        const operation = ROTATION_OPERATIONS[operationKey];
+        slot.className = `preview-slot ${state.revealMoves ? "" : "preview-slot-text"}`.trim();
+
+        if (state.revealMoves) {
+          slot.classList.add("is-filled");
+          slot.innerHTML = `
+            <span class="preview-slot-number">${stepNumber}</span>
+            <div class="preview-slot-canvas">${buildSvg(state.currentProblem, recentMatrices[index], true)}</div>
+            <span class="preview-slot-label">${operation.shortLabel}</span>
+          `;
+        } else {
+          slot.classList.add("is-filled");
+          slot.innerHTML = `
+            <span class="preview-slot-number">${stepNumber}</span>
+            <span class="preview-slot-label">${operation.shortLabel}</span>
+          `;
+        }
       } else {
+        slot.className = `preview-slot ${state.revealMoves ? "" : "preview-slot-text"}`.trim();
         slot.innerHTML = `
           <span class="preview-slot-number">${index + 1}</span>
-          <div class="preview-slot-canvas"></div>
+          ${state.revealMoves ? '<div class="preview-slot-canvas"></div>' : ""}
           <span class="preview-slot-label">비어 있음</span>
         `;
       }
@@ -192,7 +214,6 @@ export function createRotationGame(dom) {
   }
 
   function applyOperation(operationKey) {
-    const round = currentRound();
     const operation = ROTATION_OPERATIONS[operationKey];
 
     if (!operation) {
@@ -200,12 +221,12 @@ export function createRotationGame(dom) {
     }
 
     if (state.roundFinished) {
-      setStatus("라운드가 종료되었습니다. 다음 라운드 버튼으로 넘어가세요.", "warning");
+      setStatus("라운드가 종료되었습니다. 다음 버튼으로 이동하세요.", "warning");
       return;
     }
 
-    if (state.clickCount >= round.clickLimit) {
-      setStatus("남은 클릭을 모두 사용했습니다. 하나 지움 또는 전체 초기화를 사용해 보세요.", "warning");
+    if (state.clickCount >= currentRoundConfig().clickLimit) {
+      setStatus("이 문제의 클릭 수를 모두 사용했습니다. 하나 지움이나 전체 초기화를 이용하세요.", "warning");
       return;
     }
 
@@ -213,12 +234,12 @@ export function createRotationGame(dom) {
     state.clickCount += 1;
     state.currentMatrix = multiplyMatrices(operation.matrix, state.currentMatrix);
     render();
-    setStatus(`${operation.label}을(를) 적용했습니다.`);
+    setStatus(`${operation.label}을 적용했습니다.`);
   }
 
   function undoOperation() {
     if (state.roundFinished) {
-      setStatus("라운드가 종료된 뒤에는 과정을 수정할 수 없습니다.", "warning");
+      setStatus("라운드 종료 후에는 과정을 수정할 수 없습니다.", "warning");
       return;
     }
 
@@ -231,66 +252,49 @@ export function createRotationGame(dom) {
     state.clickCount = Math.max(0, state.clickCount - 1);
     rebuildCurrentMatrix();
     render();
-    setStatus("마지막 과정을 지웠습니다.");
+    setStatus("마지막 움직임을 지웠습니다.");
   }
 
   function clearOperations() {
     if (state.roundFinished) {
-      setStatus("라운드가 종료된 뒤에는 과정을 초기화할 수 없습니다.", "warning");
+      setStatus("라운드 종료 후에는 초기화할 수 없습니다.", "warning");
       return;
     }
 
     state.history = [];
     state.clickCount = 0;
-    state.currentMatrix = cloneMatrix(currentRound().beforeMatrix);
+    state.currentMatrix = cloneMatrix(state.currentProblem.beforeMatrix);
     render();
-    setStatus("과정을 모두 초기화했습니다.");
+    setStatus("현재 문제의 입력을 모두 지웠습니다.");
   }
 
   function submitAnswer() {
     if (state.roundFinished) {
-      setStatus("이미 종료된 라운드입니다. 다음 버튼으로 계속 진행하세요.", "warning");
+      setStatus("라운드가 이미 종료되었습니다.", "warning");
       return;
     }
 
     if (state.clickCount === 0) {
-      setStatus("아직 적용한 과정이 없습니다.", "warning");
+      setStatus("먼저 회전이나 반전을 한 번 이상 입력해 보세요.", "warning");
       return;
     }
 
-    if (!matricesMatch(state.currentMatrix, currentRound().targetMatrix)) {
-      setStatus("아직 후 상태와 정확히 같지 않습니다. 과정을 더 조정해 보세요.", "warning");
+    if (!matricesMatch(state.currentMatrix, state.currentProblem.targetMatrix)) {
+      setStatus("아직 후 상태와 같지 않습니다. 움직임을 다시 점검해 보세요.", "warning");
       return;
     }
 
-    finishRound(true, "정답입니다.");
-  }
-
-  function finishRound(success, message) {
-    pauseTimer();
-    state.roundFinished = true;
-
-    if (success) {
-      state.solvedCount += 1;
-    }
-
+    state.roundSolvedCount += 1;
+    state.roundResults[state.roundIndex] = state.roundSolvedCount;
+    state.problemNumber += 1;
+    loadProblem();
     render();
-
-    if (isLastRound()) {
-      dom.nextButton.textContent = "처음부터 다시";
-      dom.nextButton.classList.remove("hidden");
-      setStatus(`${message} 모든 라운드가 끝났습니다. 총 ${state.solvedCount}/${ROTATION_ROUNDS.length} 정답입니다.`, success ? "success" : "warning");
-      return;
-    }
-
-    dom.nextButton.textContent = "다음 라운드";
-    dom.nextButton.classList.remove("hidden");
-    setStatus(`${message} 다음 라운드로 넘어갈 수 있습니다.`, success ? "success" : "warning");
+    setStatus("정답입니다. 다음 랜덤 문제로 넘어갑니다.", "success");
   }
 
   function advanceRound() {
     if (!state.roundFinished) {
-      setStatus("현재 라운드를 먼저 제출하거나 시간이 끝나야 다음으로 넘어갈 수 있습니다.", "warning");
+      setStatus("현재 라운드가 끝난 뒤에만 다음으로 넘어갈 수 있습니다.", "warning");
       return;
     }
 
@@ -315,7 +319,7 @@ export function createRotationGame(dom) {
       dom.timerText.textContent = formatCountdownTime(state.remainingMs);
 
       if (state.remainingMs === 0) {
-        finishRound(false, "시간이 종료되었습니다.");
+        finishRound();
       }
     }, 250);
   }
@@ -329,43 +333,46 @@ export function createRotationGame(dom) {
     state.timerAnchorMs = null;
   }
 
-  function rebuildCurrentMatrix() {
-    let matrix = cloneMatrix(currentRound().beforeMatrix);
+  function finishRound() {
+    pauseTimer();
+    state.roundFinished = true;
+    render();
+    dom.nextButton.classList.remove("hidden");
 
+    if (isLastRound()) {
+      const round1 = state.roundResults[0];
+      const round2 = state.roundResults[1];
+      dom.nextButton.textContent = "처음부터 다시";
+      setStatus(`2라운드 종료. 1라운드 ${round1}개, 2라운드 ${round2}개 정답입니다.`, "success");
+      return;
+    }
+
+    dom.nextButton.textContent = "2라운드 시작";
+    setStatus(`1라운드 종료. 1분 동안 ${state.roundSolvedCount}개를 맞혔습니다.`, "success");
+  }
+
+  function rebuildCurrentMatrix() {
+    let matrix = cloneMatrix(state.currentProblem.beforeMatrix);
     state.history.forEach((operationKey) => {
       matrix = multiplyMatrices(ROTATION_OPERATIONS[operationKey].matrix, matrix);
     });
-
     state.currentMatrix = matrix;
   }
 
-  function currentRound() {
-    return ROTATION_ROUNDS[state.roundIndex];
+  function currentRoundConfig() {
+    return ROUND_CONFIGS[state.roundIndex];
   }
 
   function isLastRound() {
-    return state.roundIndex === ROTATION_ROUNDS.length - 1;
+    return state.roundIndex === ROUND_CONFIGS.length - 1;
   }
 
   function getRemainingClicks() {
-    return Math.max(0, currentRound().clickLimit - state.clickCount);
+    return Math.max(0, currentRoundConfig().clickLimit - state.clickCount);
   }
 
-  function renderShape(target, round, matrix) {
-    target.innerHTML = buildSvg(round, matrix, false);
-  }
-
-  function buildSvg(round, matrix, compact) {
-    const svgClass = round.shape.type === "tiles" ? "shape-figure tile-figure" : "shape-figure";
-    const scaleText = compact ? " scale(0.84)" : "";
-
-    return `
-      <svg viewBox="0 0 220 220" aria-hidden="true">
-        <g class="${svgClass}" transform="translate(110 110) matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} 0 0)${scaleText}">
-          ${getShapeMarkup(round)}
-        </g>
-      </svg>
-    `;
+  function renderShape(target, problem, matrix) {
+    target.innerHTML = buildSvg(problem, matrix, false);
   }
 
   function setStatus(message, type = "info") {
@@ -380,45 +387,156 @@ export function createRotationGame(dom) {
   }
 }
 
-function getShapeMarkup(round) {
-  if (round.shape.type === "glyph") {
-    return `
-      <text
-        x="0"
-        y="18"
-        text-anchor="middle"
-        font-size="${round.shape.fontSize}"
-        font-weight="900"
-        font-family="'Arial Black', 'Segoe UI', sans-serif"
-      >
-        ${round.shape.text}
-      </text>
-    `;
+function buildRandomGlyphProblem() {
+  const text = pickRandom(LETTER_POOL);
+  const beforeMatrix = pickRandom(TRANSFORM_SET);
+  let targetMatrix = pickRandom(TRANSFORM_SET);
+
+  while (matricesMatch(beforeMatrix, targetMatrix)) {
+    targetMatrix = pickRandom(TRANSFORM_SET);
   }
 
-  const tileSize = 24;
-  const offset = ((round.shape.cells.length - 1) * tileSize) / 2;
+  return {
+    type: "glyph",
+    text,
+    fontSize: 124,
+    beforeMatrix: cloneMatrix(beforeMatrix),
+    targetMatrix: cloneMatrix(targetMatrix),
+  };
+}
+
+function buildRandomTileProblem() {
+  let cells = [];
+  let beforeMatrix = pickRandom(TRANSFORM_SET);
+  let targetMatrix = pickRandom(TRANSFORM_SET);
+
+  do {
+    cells = createRandomCells();
+    beforeMatrix = pickRandom(TRANSFORM_SET);
+    targetMatrix = pickRandom(TRANSFORM_SET);
+  } while (
+    matricesMatch(beforeMatrix, targetMatrix) ||
+    getTileSignature(cells, beforeMatrix) === getTileSignature(cells, targetMatrix)
+  );
+
+  return {
+    type: "tiles",
+    cells,
+    beforeMatrix: cloneMatrix(beforeMatrix),
+    targetMatrix: cloneMatrix(targetMatrix),
+  };
+}
+
+function createRandomCells() {
+  const cells = Array.from({ length: 4 }, () => Array(4).fill(0));
+  const filledCount = randomInteger(4, 9);
+  let painted = 0;
+
+  while (painted < filledCount) {
+    const row = randomInteger(0, 3);
+    const col = randomInteger(0, 3);
+    if (cells[row][col] === 1) {
+      continue;
+    }
+    cells[row][col] = 1;
+    painted += 1;
+  }
+
+  return cells;
+}
+
+function getTileSignature(cells, matrix) {
+  const points = [];
+
+  cells.forEach((rowValues, rowIndex) => {
+    rowValues.forEach((value, colIndex) => {
+      if (!value) {
+        return;
+      }
+
+      const x = colIndex - 1.5;
+      const y = rowIndex - 1.5;
+      const tx = normalizeMatrixValue(matrix.a * x + matrix.c * y);
+      const ty = normalizeMatrixValue(matrix.b * x + matrix.d * y);
+      points.push(`${tx},${ty}`);
+    });
+  });
+
+  return points.sort().join("|");
+}
+
+function buildSvg(problem, matrix, compact) {
+  const scaleText = compact ? " scale(0.84)" : "";
+  return `
+    <svg viewBox="0 0 220 220" aria-hidden="true">
+      <g class="shape-figure${problem.type === "tiles" ? " tile-figure" : ""}" transform="translate(110 110) matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} 0 0)${scaleText}">
+        ${problem.type === "glyph" ? buildGlyphMarkup(problem) : buildTileMarkup(problem)}
+      </g>
+    </svg>
+  `;
+}
+
+function buildGlyphMarkup(problem) {
+  return `
+    <text
+      x="0"
+      y="18"
+      text-anchor="middle"
+      font-size="${problem.fontSize}"
+      font-weight="900"
+      font-family="'Arial Black', 'Segoe UI', sans-serif"
+      fill="#2c2c2c"
+    >
+      ${problem.text}
+    </text>
+  `;
+}
+
+function buildTileMarkup(problem) {
+  const offset = ((4 - 1) * TILE_SIZE) / 2;
   const cells = [];
 
-  round.shape.cells.forEach((rowValues, rowIndex) => {
+  problem.cells.forEach((rowValues, rowIndex) => {
     rowValues.forEach((value, colIndex) => {
-      const x = colIndex * tileSize - offset - tileSize / 2;
-      const y = rowIndex * tileSize - offset - tileSize / 2;
+      const x = colIndex * TILE_SIZE - offset - TILE_SIZE / 2;
+      const y = rowIndex * TILE_SIZE - offset - TILE_SIZE / 2;
       cells.push(`
         <rect
           x="${x}"
           y="${y}"
-          width="${tileSize}"
-          height="${tileSize}"
-          fill="${value ? "#eef2ec" : "currentColor"}"
-          stroke="#767676"
-          stroke-width="1.4"
+          width="${TILE_SIZE}"
+          height="${TILE_SIZE}"
+          fill="${value ? "#1d1d1d" : "#f3f4ef"}"
+          stroke="#7c7c7c"
+          stroke-width="1.3"
         ></rect>
       `);
     });
   });
 
   return cells.join("");
+}
+
+function buildTransformSet() {
+  const set = [];
+  const seen = new Set();
+  const flipX = normalizeMatrix({ a: -1, b: 0, c: 0, d: 1 });
+
+  for (let degrees = 0; degrees < 360; degrees += 45) {
+    addMatrix(rotationMatrix(degrees));
+    addMatrix(multiplyMatrices(rotationMatrix(degrees), flipX));
+  }
+
+  return set;
+
+  function addMatrix(matrix) {
+    const key = matrixKey(matrix);
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    set.push(matrix);
+  }
 }
 
 function rotationMatrix(degrees) {
@@ -462,9 +580,21 @@ function matricesMatch(left, right) {
   return ["a", "b", "c", "d"].every((key) => Math.abs(left[key] - right[key]) < 0.0001);
 }
 
+function matrixKey(matrix) {
+  return `${matrix.a},${matrix.b},${matrix.c},${matrix.d}`;
+}
+
 function formatCountdownTime(ms) {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
   const minutesText = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const secondsText = String(totalSeconds % 60).padStart(2, "0");
   return `${minutesText}:${secondsText}`;
+}
+
+function pickRandom(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }

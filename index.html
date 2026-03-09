@@ -33,14 +33,14 @@
           </article>
 
           <article class="game-card game-card-rotation">
-            <p class="card-kicker">2라운드 회전 퍼즐</p>
+            <p class="card-kicker">1분 라운드 퍼즐</p>
             <h2>도형 회전하기</h2>
             <p class="card-description">
-              왼쪽/오른쪽 45도 회전과 반전을 누적 적용해서 전 상태를 후 상태로 바꾸세요.
+              회전과 반전을 누적 적용해서 전 상태를 후 상태로 바꾸고, 1분 안에 최대한 많은 문제를 맞히세요.
             </p>
             <div class="card-meta">
-              <span>라운드당 60초</span>
-              <span>최소 과정 아님</span>
+              <span>라운드 2개</span>
+              <span>문자 / 4x4 블록</span>
             </div>
             <button class="primary-button" data-open-game="rotation" type="button">도형 회전하기 시작</button>
           </article>
@@ -93,9 +93,7 @@
             <div class="board-stage">
               <div id="routeBoard" class="board-grid" aria-label="길 만들기 보드"></div>
             </div>
-            <p id="routeStatusText" class="status-text">
-              칸의 대각선 방향을 눌러 거울을 배치하세요.
-            </p>
+            <p id="routeStatusText" class="status-text">칸의 대각선 방향을 눌러 거울을 배치하세요.</p>
             <button id="routeCheckButton" class="submit-button" type="button">정답 제출</button>
             <div class="bottom-actions">
               <button id="routeResetButton" class="ghost-button" type="button">다시 시작</button>
@@ -113,10 +111,12 @@
       <section id="rotationScreen" class="screen hidden">
         <header class="game-hero">
           <div class="problem-copy">
-            <p id="rotationRoundBadge" class="problem-index">1/2</p>
+            <p id="rotationRoundBadge" class="problem-index">1 / 2</p>
             <div>
               <h2>도형 회전하기</h2>
-              <p class="sub-copy">회전/반전은 현재 상태 기준으로 누적 적용됩니다.</p>
+              <p class="sub-copy">
+                라운드마다 1분 동안 최대한 많은 문제를 푸세요. 회전과 반전은 현재 상태 기준으로 누적 적용됩니다.
+              </p>
             </div>
           </div>
           <div class="timer-badge timer-badge-warn">
@@ -128,7 +128,7 @@
         <section class="rotation-stats">
           <div class="stat-card">
             <span>라운드</span>
-            <strong id="rotationRoundText">1/2</strong>
+            <strong id="rotationRoundText">1 / 2</strong>
           </div>
           <div class="stat-card">
             <span>문제</span>
@@ -158,22 +158,27 @@
           </section>
 
           <section class="rotation-controls">
-            <div class="shape-card shape-card-current">
-              <div class="shape-card-head">
-                <p class="shape-label">현재 상태</p>
-                <strong id="rotationStepCount" class="step-counter">0 / 20</strong>
-              </div>
+            <div class="rotation-utility">
+              <label class="movement-toggle">
+                <input id="rotationMovementToggle" type="checkbox" />
+                <span>움직임보기</span>
+              </label>
+              <strong id="rotationStepCount" class="step-counter">0 / 20</strong>
+            </div>
+
+            <div id="rotationCurrentCard" class="shape-card shape-card-current hidden">
+              <p class="shape-label">현재 상태</p>
               <div id="rotationCurrentStage" class="shape-stage" aria-label="현재 도형 상태"></div>
             </div>
 
             <div class="rotation-button-grid">
               <button class="rotation-action" data-rotation-op="left45" type="button">
                 <span class="rotation-action-icon">↺</span>
-                <span>왼쪽 45°</span>
+                <span>왼쪽 45도</span>
               </button>
               <button class="rotation-action" data-rotation-op="right45" type="button">
                 <span class="rotation-action-icon">↻</span>
-                <span>오른쪽 45°</span>
+                <span>오른쪽 45도</span>
               </button>
               <button class="rotation-action" data-rotation-op="flipX" type="button">
                 <span class="rotation-action-icon">↔</span>
@@ -186,10 +191,10 @@
             </div>
 
             <div class="preview-head">
-              <p>과정 미리보기</p>
+              <p>움직임 기록</p>
               <span>최근 8단계</span>
             </div>
-            <div id="rotationPreview" class="preview-grid" aria-label="회전 과정 미리보기"></div>
+            <div id="rotationPreview" class="preview-grid" aria-label="회전 과정 기록"></div>
 
             <div class="bottom-actions">
               <button id="rotationUndoButton" class="ghost-button" type="button">하나 지움</button>

@@ -1,5 +1,12 @@
 const ROUTE_BEST_STORAGE_KEY = "mirror-route-session-best-v1";
 const BOARD_SIZE = 5;
+const SOLVED_PATH_COLOR = "#d94b45";
+
+const PREVIEW_PATH_COLORS = {
+  yellow: "#d7a019",
+  blue: "#4b69d6",
+  red: "#de6b63",
+};
 
 const COLOR_META = {
   yellow: {
@@ -61,6 +68,7 @@ export function createRouteGame(dom) {
     timerBaseMs: 0,
     bestTime: loadStoredNumber(ROUTE_BEST_STORAGE_KEY),
     started: false,
+    showPathPreview: false,
   };
 
   attachEvents();
@@ -75,6 +83,7 @@ export function createRouteGame(dom) {
     dom.checkButton.addEventListener("click", checkSolution);
     dom.resetButton.addEventListener("click", restartPuzzle);
     dom.clearButton.addEventListener("click", clearMirrors);
+    dom.pathToggle.addEventListener("change", handlePathToggleChange);
     dom.nextButton.addEventListener("click", () => {
       startPuzzle(true);
     });
@@ -147,6 +156,7 @@ export function createRouteGame(dom) {
 
   function render() {
     renderBoard();
+    renderPathOverlay();
     dom.problemIndex.textContent = String(state.roundNumber);
     dom.problemHint.textContent =
       `이번 문제는 최소 거울 ${state.currentPuzzle.requiredMirrors}개가 필요합니다. 칸의 대각선을 눌러 배치하세요.`;
@@ -156,6 +166,7 @@ export function createRouteGame(dom) {
     dom.bestText.textContent = formatElapsedTime(state.bestTime);
     dom.timerText.textContent = formatElapsedTime(state.elapsedMs);
     dom.checkButton.disabled = state.solved;
+    dom.pathToggle.checked = state.showPathPreview;
   }
 
   function renderBoard() {
@@ -253,6 +264,11 @@ export function createRouteGame(dom) {
     applyMirror(key, nextMirror);
   }
 
+  function handlePathToggleChange() {
+    state.showPathPreview = dom.pathToggle.checked;
+    renderPathOverlay();
+  }
+
   function applyMirror(key, nextMirror) {
     const currentMirror = state.mirrors.get(key) ?? null;
     const finalMirror = currentMirror === nextMirror ? null : nextMirror;
@@ -322,13 +338,12 @@ export function createRouteGame(dom) {
   }
 
   function allRoutesMatched() {
-    return state.currentPuzzle.vehicles.every((vehicle) => {
-      const result = simulateVehicle(vehicle);
+    return getVehicleTraces().every((result) => {
       if (result.loop || !result.exit) {
         return false;
       }
 
-      const passenger = getPassengerByColor(vehicle.color);
+      const passenger = getPassengerByColor(result.vehicle.color);
       return passenger.exit.side === result.exit.side && passenger.exit.index === result.exit.index;
     });
   }
@@ -336,19 +351,23 @@ export function createRouteGame(dom) {
   function simulateVehicle(vehicle) {
     const visited = new Set();
     let { row, col, dir } = getStartState(vehicle.entry);
+    const points = [getEdgePoint(vehicle.entry)];
 
     for (let step = 0; step < 80; step += 1) {
       const next = moveStep(row, col, dir);
       if (next.row < 0 || next.row >= BOARD_SIZE || next.col < 0 || next.col >= BOARD_SIZE) {
-        return { exit: getExitEdge(row, col, dir), loop: false };
+        const exit = getExitEdge(row, col, dir);
+        points.push(getEdgePoint(exit));
+        return { exit, loop: false, points };
       }
 
       row = next.row;
       col = next.col;
+      points.push(getCellCenter(row, col));
 
       const loopKey = `${row},${col},${dir}`;
       if (visited.has(loopKey)) {
-        return { exit: null, loop: true };
+        return { exit: null, loop: true, points };
       }
       visited.add(loopKey);
 
@@ -358,7 +377,58 @@ export function createRouteGame(dom) {
       }
     }
 
-    return { exit: null, loop: true };
+    return { exit: null, loop: true, points };
+  }
+
+  function getVehicleTraces() {
+    return state.currentPuzzle.vehicles.map((vehicle) => ({
+      vehicle,
+      ...simulateVehicle(vehicle),
+    }));
+  }
+
+  function renderPathOverlay() {
+    if (!state.currentPuzzle || (!state.showPathPreview && !state.solved)) {
+      dom.pathOverlay.innerHTML = "";
+      return;
+    }
+
+    const traces = getVehicleTraces();
+    dom.pathOverlay.innerHTML = traces
+      .map((trace) => buildPathMarkup(trace))
+      .filter(Boolean)
+      .join("");
+  }
+
+  function buildPathMarkup(trace) {
+    if (!trace.points || trace.points.length < 2) {
+      return "";
+    }
+
+    const pathData = trace.points
+      .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+      .join(" ");
+    const color = state.solved ? SOLVED_PATH_COLOR : PREVIEW_PATH_COLORS[trace.vehicle.color];
+    const opacity = trace.loop ? "0.45" : "0.9";
+
+    return `<path class="route-path${state.solved ? " is-solved" : ""}" d="${pathData}" stroke="${color}" opacity="${opacity}"></path>`;
+  }
+
+  function getEdgePoint(edge) {
+    if (edge.side === "left") {
+      return { x: 0.5, y: edge.index + 1.5 };
+    }
+    if (edge.side === "right") {
+      return { x: 6.5, y: edge.index + 1.5 };
+    }
+    if (edge.side === "top") {
+      return { x: edge.index + 1.5, y: 0.5 };
+    }
+    return { x: edge.index + 1.5, y: 6.5 };
+  }
+
+  function getCellCenter(row, col) {
+    return { x: col + 1.5, y: row + 1.5 };
   }
 
   function getPassengerByColor(color) {

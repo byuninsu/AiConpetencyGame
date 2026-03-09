@@ -92,6 +92,13 @@
           <section class="board-panel">
             <div class="board-stage">
               <div id="routeBoard" class="board-grid" aria-label="길 만들기 보드"></div>
+              <svg id="routePathOverlay" class="route-path-overlay" viewBox="0 0 7 7" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </div>
+            <div class="route-utility">
+              <label class="movement-toggle">
+                <input id="routePathToggle" type="checkbox" />
+                <span>경로보기</span>
+              </label>
             </div>
             <p id="routeStatusText" class="status-text">칸의 대각선 방향을 눌러 거울을 배치하세요.</p>
             <button id="routeCheckButton" class="submit-button" type="button">정답 제출</button>

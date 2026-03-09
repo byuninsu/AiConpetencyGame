@@ -26,6 +26,8 @@ const routeGame = createRouteGame({
   placedText: document.querySelector("#routePlacedText"),
   bestText: document.querySelector("#routeBestText"),
   board: document.querySelector("#routeBoard"),
+  pathOverlay: document.querySelector("#routePathOverlay"),
+  pathToggle: document.querySelector("#routePathToggle"),
   statusText: document.querySelector("#routeStatusText"),
   checkButton: document.querySelector("#routeCheckButton"),
   resetButton: document.querySelector("#routeResetButton"),

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="chickenA" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffcf66"/>
+      <stop offset="1" stop-color="#d97a24"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(10 8)">
+    <ellipse cx="72" cy="118" rx="46" ry="12" fill="#d45730" opacity=".15"/>
+    <g transform="rotate(-18 48 70)">
+      <circle cx="28" cy="63" r="8" fill="#fff7ef"/>
+      <circle cx="40" cy="56" r="8" fill="#fff7ef"/>
+      <rect x="32" y="56" width="18" height="12" rx="6" fill="#fff7ef"/>
+      <path d="M48 42c19-9 38-3 46 14 8 18 0 38-21 47-22 9-43 2-51-15-8-17 3-38 26-46Z" fill="url(#chickenA)"/>
+      <path d="M37 62c10-14 26-25 47-27" fill="none" stroke="#ffdf93" stroke-linecap="round" stroke-width="5"/>
+    </g>
+    <g transform="translate(50 18) rotate(24 54 54)">
+      <circle cx="26" cy="66" r="8" fill="#fff7ef"/>
+      <circle cx="38" cy="59" r="8" fill="#fff7ef"/>
+      <rect x="30" y="59" width="18" height="12" rx="6" fill="#fff7ef"/>
+      <path d="M46 46c18-8 37-2 45 14s1 35-19 44c-21 10-41 4-49-12-9-17 1-36 23-46Z" fill="url(#chickenA)"/>
+      <path d="M36 68c13-18 24-25 42-31" fill="none" stroke="#ffd881" stroke-linecap="round" stroke-width="5"/>
+    </g>
+    <path d="M90 112c8-10 18-17 29-17 9 0 16 4 23 12-10 8-18 13-27 13-10 0-18-3-25-8Z" fill="#5cab54"/>
+  </g>
+</svg>

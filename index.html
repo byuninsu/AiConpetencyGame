@@ -12,7 +12,7 @@
         <div class="site-copy">
           <p class="eyebrow">Competency Game</p>
           <h1 id="siteTitle">게임 선택</h1>
-          <p id="siteSubtitle" class="site-subtitle">원하는 게임을 골라 바로 시작하세요.</p>
+          <p id="siteSubtitle" class="site-subtitle">원하는 게임을 고르고 바로 시작해 보세요.</p>
         </div>
         <button id="menuButton" class="ghost-button hidden" type="button">게임 선택으로</button>
       </header>
@@ -23,10 +23,10 @@
             <p class="card-kicker">5x5 보드 퍼즐</p>
             <h2>길 만들기</h2>
             <p class="card-description">
-              거울을 배치해서 각 차량이 같은 색 손님에게 도착하도록 길을 연결하세요.
+              거울을 배치해서 각 차량을 같은 색 승객에게 정확하게 연결해 보세요.
             </p>
             <div class="card-meta">
-              <span>정적 퍼즐</span>
+              <span>대칭 경로 퍼즐</span>
               <span>최소 거울 수 조건 포함</span>
             </div>
             <button class="primary-button" data-open-game="route" type="button">길 만들기 시작</button>
@@ -36,13 +36,26 @@
             <p class="card-kicker">1분 라운드 퍼즐</p>
             <h2>도형 회전하기</h2>
             <p class="card-description">
-              회전과 반전을 누적 적용해서 전 상태를 후 상태로 바꾸고, 1분 안에 최대한 많은 문제를 맞히세요.
+              회전과 반전을 연속으로 적용해서 전 상태를 후 상태와 같게 만들어 보세요.
             </p>
             <div class="card-meta">
               <span>라운드 2개</span>
               <span>문자 / 4x4 블록</span>
             </div>
             <button class="primary-button" data-open-game="rotation" type="button">도형 회전하기 시작</button>
+          </article>
+
+          <article class="game-card game-card-appointment">
+            <p class="card-kicker">4라운드 기억 퍼즐</p>
+            <h2>약속 정하기</h2>
+            <p class="card-description">
+              요일, 장소, 메뉴, 버스 정보를 짧게 기억하고 공통 선택 또는 빈 버스를 찾아 보세요.
+            </p>
+            <div class="card-meta">
+              <span>라운드 4개</span>
+              <span>3초 선택 제한</span>
+            </div>
+            <button class="primary-button" data-open-game="appointment" type="button">약속 정하기 시작</button>
           </article>
         </div>
       </section>
@@ -54,7 +67,7 @@
             <div>
               <h2>길 만들기</h2>
               <p id="routeProblemHint" class="sub-copy">
-                칸의 대각선 방향을 눌러 `/` 또는 `\` 거울을 배치하세요.
+                칸의 대각선 방향을 눌러 <code>/</code> 또는 <code>\</code> 거울을 배치하세요.
               </p>
             </div>
           </div>
@@ -108,7 +121,7 @@
               <button id="routeNextButton" class="ghost-button ghost-button-strong" type="button">다음 문제</button>
             </div>
             <div class="guide-strip">
-              <span><i class="guide-swatch guide-cell"></i>회색 칸은 아직 비어 있는 칸</span>
+              <span><i class="guide-swatch guide-cell"></i>연한 칸은 아직 비어 있는 칸</span>
               <span><i class="guide-swatch guide-stroke"></i>초록 선은 배치한 거울</span>
             </div>
           </section>
@@ -122,7 +135,7 @@
             <div>
               <h2>도형 회전하기</h2>
               <p class="sub-copy">
-                라운드마다 1분 동안 최대한 많은 문제를 푸세요. 회전과 반전은 현재 상태 기준으로 누적 적용됩니다.
+                라운드마다 1분 동안 최대한 많은 문제를 맞혀 보세요. 회전과 반전을 이용해 전 상태를 후 상태로 바꾸면 됩니다.
               </p>
             </div>
           </div>
@@ -157,7 +170,7 @@
               <p class="shape-label">전</p>
               <div id="rotationBeforeStage" class="shape-stage" aria-label="회전 전 도형"></div>
             </div>
-            <div class="shape-arrow" aria-hidden="true">↓</div>
+            <div class="shape-arrow" aria-hidden="true">→</div>
             <div class="shape-card shape-card-target">
               <p class="shape-label">후</p>
               <div id="rotationAfterStage" class="shape-stage" aria-label="회전 후 도형"></div>
@@ -239,6 +252,79 @@
             >
               처음부터 다시
             </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="appointmentScreen" class="screen hidden">
+        <header class="game-hero appointment-hero">
+          <div class="problem-copy">
+            <p id="appointmentRoundBadge" class="problem-index">1 / 4</p>
+            <div>
+              <h2>약속 정하기</h2>
+              <p id="appointmentHintText" class="sub-copy">
+                세 사람이 말한 선호를 짧게 기억하고 공통 선택 또는 빈 버스를 찾아 보세요.
+              </p>
+            </div>
+          </div>
+          <div id="appointmentTimerWrap" class="timer-badge timer-badge-warn appointment-timer hidden">
+            <span class="timer-label">남은 시간</span>
+            <strong id="appointmentTimerText">3.0</strong>
+          </div>
+        </header>
+
+        <section class="appointment-stats">
+          <div class="stat-card">
+            <span>라운드</span>
+            <strong id="appointmentRoundText">1 / 4</strong>
+          </div>
+          <div class="stat-card">
+            <span>정답</span>
+            <strong id="appointmentSolvedText">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>단계</span>
+            <strong id="appointmentModeText">기억</strong>
+          </div>
+          <div class="stat-card">
+            <span>남은 라운드</span>
+            <strong id="appointmentRemainingText">4</strong>
+          </div>
+        </section>
+
+        <section class="appointment-shell">
+          <div class="shape-card appointment-strip">
+            <div class="appointment-strip-head">
+              <p id="appointmentPhaseText">차례 1 / 3</p>
+              <span id="appointmentChoiceCountText">선택지 7개</span>
+            </div>
+            <p id="appointmentPromptText" class="appointment-prompt">사람들이 말한 정보를 기억하세요.</p>
+            <div id="appointmentAnswerProgress" class="appointment-answer-progress hidden" aria-hidden="true">
+              <span id="appointmentAnswerProgressBar" class="appointment-answer-progress-bar"></span>
+            </div>
+          </div>
+
+          <div id="appointmentStage" class="shape-card appointment-stage" aria-live="polite"></div>
+          <div id="appointmentOptions" class="appointment-options hidden"></div>
+
+          <p id="appointmentStatusText" class="status-text">사람들이 말한 선호를 기억하세요.</p>
+
+          <div class="bottom-actions">
+            <button id="appointmentRestartButton" class="ghost-button ghost-button-strong" type="button">
+              처음부터 다시
+            </button>
+          </div>
+        </section>
+
+        <div id="appointmentIntroPopup" class="appointment-intro hidden" aria-live="polite" aria-atomic="true">
+          <div class="appointment-intro-card">
+            <p class="appointment-intro-kicker">시작 안내</p>
+            <strong class="appointment-intro-title">곧 게임이 시작됩니다</strong>
+            <p class="appointment-intro-copy">3초 뒤에 1라운드가 시작됩니다. 집중해 주세요.</p>
+            <strong id="appointmentIntroCountdown" class="appointment-intro-countdown">3</strong>
+            <div class="appointment-intro-progress" aria-hidden="true">
+              <span id="appointmentIntroProgressBar" class="appointment-intro-progress-bar"></span>
+            </div>
           </div>
         </div>
       </section>

@@ -1,5 +1,6 @@
 import { createRouteGame } from "./js/route-game.js";
 import { createRotationGame } from "./js/rotation-game.js";
+import { createAppointmentGame } from "./js/appointment-game.js";
 
 const dom = {
   siteTitle: document.querySelector("#siteTitle"),
@@ -10,6 +11,7 @@ const dom = {
     menu: document.querySelector("#menuScreen"),
     route: document.querySelector("#routeScreen"),
     rotation: document.querySelector("#rotationScreen"),
+    appointment: document.querySelector("#appointmentScreen"),
   },
 };
 
@@ -69,6 +71,29 @@ const rotationGame = createRotationGame({
   operationButtons: Array.from(document.querySelectorAll("[data-rotation-op]")),
 });
 
+const appointmentGame = createAppointmentGame({
+  roundBadge: document.querySelector("#appointmentRoundBadge"),
+  roundText: document.querySelector("#appointmentRoundText"),
+  hintText: document.querySelector("#appointmentHintText"),
+  phaseText: document.querySelector("#appointmentPhaseText"),
+  modeText: document.querySelector("#appointmentModeText"),
+  solvedText: document.querySelector("#appointmentSolvedText"),
+  remainingText: document.querySelector("#appointmentRemainingText"),
+  timerWrap: document.querySelector("#appointmentTimerWrap"),
+  timerText: document.querySelector("#appointmentTimerText"),
+  progress: document.querySelector("#appointmentAnswerProgress"),
+  progressBar: document.querySelector("#appointmentAnswerProgressBar"),
+  promptText: document.querySelector("#appointmentPromptText"),
+  choiceCountText: document.querySelector("#appointmentChoiceCountText"),
+  stage: document.querySelector("#appointmentStage"),
+  options: document.querySelector("#appointmentOptions"),
+  statusText: document.querySelector("#appointmentStatusText"),
+  restartButton: document.querySelector("#appointmentRestartButton"),
+  introPopup: document.querySelector("#appointmentIntroPopup"),
+  introCountdown: document.querySelector("#appointmentIntroCountdown"),
+  introProgressBar: document.querySelector("#appointmentIntroProgressBar"),
+});
+
 init();
 
 function init() {
@@ -116,8 +141,14 @@ function showScreen(screen) {
     return;
   }
 
-  renderRotationHeader();
-  rotationGame.activate();
+  if (screen === "rotation") {
+    renderRotationHeader();
+    rotationGame.activate();
+    return;
+  }
+
+  renderAppointmentHeader();
+  appointmentGame.activate();
 }
 
 function deactivateCurrentScreen() {
@@ -128,19 +159,28 @@ function deactivateCurrentScreen() {
   if (appState.screen === "rotation") {
     rotationGame.deactivate();
   }
+
+  if (appState.screen === "appointment") {
+    appointmentGame.deactivate();
+  }
 }
 
 function renderMenuHeader() {
   dom.siteTitle.textContent = "게임 선택";
-  dom.siteSubtitle.textContent = "원하는 게임을 골라 바로 시작하세요.";
+  dom.siteSubtitle.textContent = "원하는 게임을 고르고 바로 시작해 보세요.";
 }
 
 function renderRouteHeader() {
   dom.siteTitle.textContent = "길 만들기";
-  dom.siteSubtitle.textContent = "거울을 배치해서 차량을 같은 색 손님에게 연결하세요.";
+  dom.siteSubtitle.textContent = "거울을 배치해서 각 차량을 같은 색 승객에게 연결해 보세요.";
 }
 
 function renderRotationHeader() {
   dom.siteTitle.textContent = "도형 회전하기";
-  dom.siteSubtitle.textContent = "1분 안에 최대한 많은 문제를 맞히는 라운드형 회전 퍼즐입니다.";
+  dom.siteSubtitle.textContent = "1분 안에 최대한 많은 문제를 맞히는 라운드형 회전 게임입니다.";
+}
+
+function renderAppointmentHeader() {
+  dom.siteTitle.textContent = "약속 정하기";
+  dom.siteSubtitle.textContent = "세 사람이 말한 선호를 기억하고 공통 선택과 빈 버스를 찾아 보세요.";
 }

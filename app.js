@@ -63,6 +63,7 @@ const rotationGame = createRotationGame({
 init();
 
 function init() {
+  document.body.dataset.screen = "menu";
   attachEvents();
   renderMenuHeader();
   showScreen("menu");
@@ -87,6 +88,7 @@ function showScreen(screen) {
 
   deactivateCurrentScreen();
   appState.screen = screen;
+  document.body.dataset.screen = screen;
 
   Object.entries(dom.screens).forEach(([key, element]) => {
     element.classList.toggle("hidden", key !== screen);

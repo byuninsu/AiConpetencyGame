@@ -62,6 +62,10 @@ button {
   border-bottom: 1px solid rgba(124, 114, 103, 0.18);
 }
 
+.site-copy {
+  min-width: 0;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: var(--warm);
@@ -930,6 +934,232 @@ button {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  body[data-screen="rotation"] .app-shell {
+    width: min(100% - 12px, 860px);
+    padding-top: 14px;
+    padding-bottom: 18px;
+  }
+
+  body[data-screen="rotation"] .site-header {
+    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+
+  body[data-screen="rotation"] .site-copy {
+    flex: 1;
+  }
+
+  body[data-screen="rotation"] .site-header h1 {
+    font-size: 1.25rem;
+  }
+
+  body[data-screen="rotation"] .site-subtitle,
+  #rotationScreen .sub-copy {
+    display: none;
+  }
+
+  body[data-screen="rotation"] #menuButton {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  #rotationScreen .game-hero {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  #rotationScreen .problem-copy {
+    gap: 8px;
+  }
+
+  #rotationScreen .problem-index {
+    min-width: 40px;
+    margin-top: 0;
+    font-size: 1rem;
+  }
+
+  #rotationScreen .problem-copy h2 {
+    font-size: 1.08rem;
+  }
+
+  #rotationScreen .timer-badge {
+    min-width: 86px;
+    padding: 8px 10px;
+    border-radius: 14px;
+  }
+
+  #rotationScreen .timer-label {
+    font-size: 0.68rem;
+  }
+
+  #rotationScreen .timer-badge strong {
+    margin-top: 4px;
+    font-size: 1.02rem;
+  }
+
+  #rotationScreen .rotation-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #rotationScreen .stat-card {
+    padding: 10px 8px;
+    border-radius: 18px;
+  }
+
+  #rotationScreen .stat-card span {
+    font-size: 0.68rem;
+  }
+
+  #rotationScreen .stat-card strong {
+    margin-top: 4px;
+    font-size: 1.05rem;
+  }
+
+  #rotationScreen .rotation-layout {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  #rotationScreen .rotation-targets,
+  #rotationScreen .rotation-controls {
+    gap: 10px;
+  }
+
+  #rotationScreen .shape-card {
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  #rotationScreen .shape-label {
+    font-size: 0.8rem;
+  }
+
+  #rotationScreen .shape-arrow {
+    font-size: 1.15rem;
+  }
+
+  #rotationScreen .shape-stage {
+    min-height: 118px;
+  }
+
+  #rotationScreen .shape-stage svg {
+    width: min(100%, 126px);
+  }
+
+  #rotationScreen .rotation-utility {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  #rotationScreen .movement-toggle {
+    gap: 6px;
+    font-size: 0.82rem;
+  }
+
+  #rotationScreen .movement-toggle input {
+    width: 14px;
+    height: 14px;
+  }
+
+  #rotationScreen .step-counter {
+    font-size: 0.78rem;
+  }
+
+  #rotationScreen .rotation-button-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #rotationScreen .rotation-action {
+    min-height: 54px;
+    gap: 8px;
+    padding: 0 10px;
+    border-radius: 18px;
+    font-size: 0.82rem;
+  }
+
+  #rotationScreen .rotation-action-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.92rem;
+  }
+
+  #rotationScreen .preview-head p,
+  #rotationScreen .preview-head span {
+    font-size: 0.74rem;
+  }
+
+  #rotationScreen .preview-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  #rotationScreen .preview-slot {
+    min-height: 82px;
+    padding: 6px;
+    border-radius: 16px;
+  }
+
+  #rotationScreen .preview-slot-canvas {
+    min-height: 42px;
+  }
+
+  #rotationScreen .preview-slot-canvas svg {
+    width: min(100%, 48px);
+  }
+
+  #rotationScreen .preview-slot-number {
+    font-size: 0.62rem;
+  }
+
+  #rotationScreen .preview-slot-label {
+    font-size: 0.58rem;
+  }
+
+  #rotationScreen .preview-slot-text {
+    min-height: 62px;
+  }
+
+  #rotationScreen .preview-slot-text .preview-slot-label {
+    font-size: 0.64rem;
+    line-height: 1.25;
+  }
+
+  #rotationScreen .bottom-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #rotationScreen .ghost-button,
+  #rotationScreen .submit-button {
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 0.82rem;
+  }
+
+  #rotationScreen .submit-button,
+  #rotationScreen .ghost-button-strong {
+    width: 100%;
+  }
+
+  #rotationScreen .status-text {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
 }
 
 @media (max-width: 560px) {
@@ -968,5 +1198,86 @@ button {
 
   .preview-slot {
     min-height: 118px;
+  }
+
+  body[data-screen="rotation"] .app-shell {
+    width: min(100% - 8px, 860px);
+    padding-top: 10px;
+    padding-bottom: 14px;
+  }
+
+  body[data-screen="rotation"] .site-header {
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  body[data-screen="rotation"] .eyebrow {
+    margin-bottom: 4px;
+    font-size: 0.66rem;
+  }
+
+  body[data-screen="rotation"] .site-header h1 {
+    font-size: 1.1rem;
+  }
+
+  #rotationScreen .rotation-layout {
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  #rotationScreen .rotation-targets,
+  #rotationScreen .rotation-controls {
+    gap: 8px;
+  }
+
+  #rotationScreen .shape-card {
+    padding: 8px;
+  }
+
+  #rotationScreen .shape-stage {
+    min-height: 96px;
+  }
+
+  #rotationScreen .shape-stage svg {
+    width: min(100%, 110px);
+  }
+
+  #rotationScreen .rotation-action {
+    min-height: 48px;
+    font-size: 0.76rem;
+  }
+
+  #rotationScreen .rotation-action-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  #rotationScreen .preview-slot {
+    min-height: 70px;
+    padding: 5px;
+  }
+
+  #rotationScreen .preview-slot-text {
+    min-height: 54px;
+  }
+
+  #rotationScreen .preview-slot-canvas {
+    min-height: 34px;
+  }
+
+  #rotationScreen .preview-slot-canvas svg {
+    width: min(100%, 40px);
+  }
+
+  #rotationScreen .ghost-button,
+  #rotationScreen .submit-button {
+    min-height: 36px;
+    font-size: 0.78rem;
+  }
+
+  #rotationScreen .status-text {
+    font-size: 0.72rem;
   }
 }
